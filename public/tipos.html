@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="utf-8">
+<title>Alerta Ciudadana</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+/* =========================
+RESET
+========================= */
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Segoe UI, Arial;
+background:#eef3f8;
+}
+
+/* =========================
+HEADER
+========================= */
+
+.header{
+
+background:linear-gradient(120deg,#2c5c86,#79a9ce);
+
+color:white;
+
+text-align:center;
+
+padding:50px 20px;
+
+}
+
+.header h1{
+
+margin:0;
+font-size:36px;
+
+}
+
+.header p{
+
+margin-top:10px;
+
+}
+
+.btnMapa{
+
+display:inline-block;
+
+margin-top:20px;
+
+background:white;
+
+color:#2c5c86;
+
+padding:12px 25px;
+
+border-radius:25px;
+
+text-decoration:none;
+
+font-weight:bold;
+
+}
+
+/* =========================
+CONTENEDOR
+========================= */
+
+.container{
+
+max-width:1200px;
+
+margin:auto;
+
+padding:30px;
+
+}
+
+/* =========================
+GRID PRINCIPAL
+========================= */
+
+.topGrid{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:30px;
+
+margin-bottom:30px;
+
+}
+
+/* =========================
+BIENVENIDA
+========================= */
+
+.info{
+
+background:white;
+
+padding:25px;
+
+border-radius:12px;
+
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+}
+
+.info i{
+
+font-size:45px;
+
+color:#2c5c86;
+
+}
+
+/* =========================
+ESTADISTICAS
+========================= */
+
+.livePanel{
+
+background:white;
+
+padding:25px;
+
+border-radius:12px;
+
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+
+}
+
+.liveGrid{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:15px;
+
+margin-top:15px;
+
+}
+
+.liveCard{
+
+background:#f3f6f9;
+
+padding:15px;
+
+border-radius:8px;
+
+text-align:center;
+
+}
+
+.liveCard h2{
+
+margin:0;
+
+color:#2c5c86;
+
+}
+
+/* =========================
+FEED
+========================= */
+
+.feedPanel{
+
+background:white;
+
+padding:25px;
+
+border-radius:12px;
+
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+
+margin-bottom:30px;
+
+}
+
+.feedItem{
+
+display:flex;
+
+gap:15px;
+
+padding:12px;
+
+border-bottom:1px solid #eee;
+
+align-items:center;
+
+}
+
+.feedFoto{
+
+width:60px;
+
+height:60px;
+
+border-radius:8px;
+
+object-fit:cover;
+
+}
+
+.feedTipo{
+
+font-weight:bold;
+
+color:#2c5c86;
+
+}
+
+/* =========================
+TIPOS
+========================= */
+
+.tiposGrid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+
+gap:20px;
+
+}
+
+.card{
+
+background:white;
+
+padding:20px;
+
+border-radius:10px;
+
+text-align:center;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+
+transition:0.3s;
+
+}
+
+.card:hover{
+
+transform:translateY(-5px);
+
+}
+
+.icono{
+
+font-size:35px;
+
+color:#2c5c86;
+
+margin-bottom:10px;
+
+}
+
+/* =========================
+RESPONSIVE
+========================= */
+
+@media(max-width:900px){
+
+.topGrid{
+
+grid-template-columns:1fr;
+
+}
+
+.liveGrid{
+
+grid-template-columns:repeat(2,1fr);
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+
+<h1>Alerta Ciudadana</h1>
+
+<p>Plataforma ciudadana para reportar problemas urbanos</p>
+
+<a href="index.html" class="btnMapa">Entrar al mapa de reportes</a>
+
+</div>
+
+
+<div class="container">
+
+<!-- GRID SUPERIOR -->
+
+<div class="topGrid">
+
+<!-- BIENVENIDA -->
+
+<div class="info">
+
+<div>
+
+<h3>Bienvenido</h3>
+
+<p>
+Alerta Ciudadana permite reportar problemas urbanos
+como baches, basura, drenaje o luminarias.
+</p>
+
+</div>
+
+<i class="fa-solid fa-city"></i>
+
+</div>
+
+
+<!-- ESTADISTICAS -->
+
+<div class="livePanel">
+
+<h3>Reportes en tiempo real</h3>
+
+<div class="liveGrid">
+
+<div class="liveCard">
+<h2 id="liveTotal">0</h2>
+Total
+</div>
+
+<div class="liveCard">
+<h2 id="liveBaches">0</h2>
+Baches
+</div>
+
+<div class="liveCard">
+<h2 id="liveBasura">0</h2>
+Basura
+</div>
+
+<div class="liveCard">
+<h2 id="liveDrenaje">0</h2>
+Drenaje
+</div>
+
+<div class="liveCard">
+<h2 id="liveAgua">0</h2>
+Agua
+</div>
+
+<div class="liveCard">
+<h2 id="liveLuminaria">0</h2>
+Luminarias
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- FEED -->
+
+<div class="feedPanel">
+
+<h3>Reportes recientes</h3>
+
+<div id="feedReportes">
+
+Cargando reportes...
+
+</div>
+
+</div>
+
+
+<!-- TIPOS -->
+
+<h3>Tipos de reporte</h3>
+
+<div class="tiposGrid">
+
+<div class="card">
+<div class="icono"><i class="fa-solid fa-lightbulb"></i></div>
+<h4>Luminarias</h4>
+<p>Fallas en iluminación pública</p>
+</div>
+
+<div class="card">
+<div class="icono"><i class="fa-solid fa-droplet"></i></div>
+<h4>Agua</h4>
+<p>Fugas o falta de agua</p>
+</div>
+
+<div class="card">
+<div class="icono"><i class="fa-solid fa-trash"></i></div>
+<h4>Basura</h4>
+<p>Acumulación de basura</p>
+</div>
+
+<div class="card">
+<div class="icono"><i class="fa-solid fa-water"></i></div>
+<h4>Drenaje</h4>
+<p>Problemas de drenaje</p>
+</div>
+
+<div class="card">
+<div class="icono"><i class="fa-solid fa-road"></i></div>
+<h4>Baches</h4>
+<p>Baches o grietas en calles</p>
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================
+CARGAR REPORTES
+========================= */
+
+function cargarReportes(){
+
+fetch("/reportes")
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let total=data.length
+
+let baches=0
+let basura=0
+let drenaje=0
+let agua=0
+let luminaria=0
+
+data.forEach(r=>{
+
+if(r.categoria.includes("Bache")) baches++
+else if(r.categoria.includes("Basura")) basura++
+else if(r.categoria.includes("Drenaje")) drenaje++
+else if(r.categoria.includes("Agua")) agua++
+else if(r.categoria.includes("Luminaria")) luminaria++
+
+})
+
+document.getElementById("liveTotal").innerText=total
+document.getElementById("liveBaches").innerText=baches
+document.getElementById("liveBasura").innerText=basura
+document.getElementById("liveDrenaje").innerText=drenaje
+document.getElementById("liveAgua").innerText=agua
+document.getElementById("liveLuminaria").innerText=luminaria
+
+
+let feed=document.getElementById("feedReportes")
+
+feed.innerHTML=""
+
+data.slice(-6).reverse().forEach(r=>{
+
+let foto = r.foto ? "/uploads/"+r.foto : ""
+
+feed.innerHTML += `
+
+<div class="feedItem">
+
+${foto ? `<img class="feedFoto" src="${foto}">` : `<i class="fa-solid fa-location-dot"></i>`}
+
+<div>
+
+<div class="feedTipo">${r.categoria}</div>
+
+<div>${r.direccion || "Ubicación registrada"}</div>
+
+</div>
+
+</div>
+
+`
+
+})
+
+})
+
+}
+
+cargarReportes()
+
+setInterval(cargarReportes,8000)
+
+</script>
+
+</body>
+</html>

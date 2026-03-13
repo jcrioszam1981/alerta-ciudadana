@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="utf-8">
+<title>Alerta Ciudadana | Estadísticas</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI, Arial;
+background:#eef3f7;
+}
+
+.header{
+background:#1f3b63;
+color:white;
+padding:25px;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:30px;
+}
+
+.card{
+background:white;
+border-radius:10px;
+padding:20px;
+margin-bottom:25px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:15px;
+}
+
+.stat{
+background:#f4f6f9;
+padding:15px;
+border-radius:8px;
+text-align:center;
+}
+
+.stat h2{
+margin:0;
+font-size:28px;
+color:#1f3b63;
+}
+
+.dashboardGrid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:20px;
+margin-bottom:20px;
+}
+
+.kpi{
+background:#f4f6f9;
+padding:20px;
+border-radius:10px;
+text-align:center;
+}
+
+.kpi h2{
+margin:0;
+font-size:30px;
+color:#1f3b63;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px;
+}
+
+.tipo{
+background:#f4f6f9;
+padding:12px;
+border-radius:8px;
+text-align:center;
+}
+
+.report-row{
+display:flex;
+justify-content:space-between;
+padding:12px;
+border-bottom:1px solid #eee;
+}
+
+.grid-fotos{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:15px;
+}
+
+.reporte-card{
+border-radius:8px;
+overflow:hidden;
+background:white;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+.reporte-card img{
+width:100%;
+height:140px;
+object-fit:cover;
+}
+
+.reporte-body{
+padding:10px;
+}
+
+#heatmap{
+height:400px;
+border-radius:10px;
+}
+
+canvas{
+max-height:300px;
+}
+
+.btn{
+display:inline-block;
+background:#1f3b63;
+color:white;
+padding:10px 20px;
+border-radius:20px;
+text-decoration:none;
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<h1>Alerta Ciudadana</h1>
+<p>Panel estadístico del sistema de reportes urbanos</p>
+
+</div>
+
+<div class="container">
+
+<!-- TABLERO KPI -->
+
+<div class="card">
+
+<h3>Tablero de análisis</h3>
+
+<div class="dashboardGrid">
+
+<div class="kpi">
+<h2 id="kpiTotal">0</h2>
+Total reportes
+</div>
+
+<div class="kpi">
+<h2 id="kpiPromedio">0</h2>
+Promedio por tipo
+</div>
+
+<div class="kpi">
+<h2 id="kpiPrincipal">-</h2>
+Tipo más reportado
+</div>
+
+</div>
+
+<canvas id="graficaReportes"></canvas>
+
+</div>
+
+<!-- RESUMEN -->
+
+<div class="card">
+
+<h3>Resumen general</h3>
+
+<div class="stats">
+
+<div class="stat"><h2 id="total">0</h2>Total</div>
+<div class="stat"><h2 id="baches">0</h2>Baches</div>
+<div class="stat"><h2 id="basura">0</h2>Basura</div>
+<div class="stat"><h2 id="drenaje">0</h2>Drenaje</div>
+<div class="stat"><h2 id="agua">0</h2>Agua</div>
+<div class="stat"><h2 id="luminaria">0</h2>Luminarias</div>
+
+</div>
+
+</div>
+
+<!-- GRAFICA POR MES -->
+
+<div class="card">
+
+<h3>Comportamiento de reportes por mes</h3>
+
+<canvas id="graficaMes"></canvas>
+
+</div>
+
+<!-- MAPA DE CALOR -->
+
+<div class="card">
+
+<h3>Mapa de calor de problemas urbanos</h3>
+
+<div id="heatmap"></div>
+
+</div>
+
+<!-- RANKING CALLES -->
+
+<div class="card">
+
+<h3>Calles con más reportes</h3>
+
+<div id="rankingCalles"></div>
+
+</div>
+
+<!-- REPORTES RECIENTES -->
+
+<div class="card">
+
+<h3>Reportes recientes</h3>
+
+<div id="topReportes"></div>
+
+</div>
+
+<!-- TIPOS -->
+
+<div class="card">
+
+<h3>Reportes por tipo</h3>
+
+<div class="grid" id="tiposGrid"></div>
+
+</div>
+
+<!-- FOTOS -->
+
+<div class="card">
+
+<h3>Últimos reportes con fotografía</h3>
+
+<div class="grid-fotos" id="fotos"></div>
+
+</div>
+
+<a href="index.html" class="btn">Volver al mapa</a>
+
+</div>
+
+<script src="estadisticas.js"></script>
+
+</body>
+</html>

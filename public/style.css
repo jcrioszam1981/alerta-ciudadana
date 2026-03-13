@@ -1,0 +1,495 @@
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#f4f6f9;
+color:#333;
+}
+
+/* =====================================================
+   MAPA
+===================================================== */
+
+#map{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100vh;
+z-index:1;
+}
+
+/* =====================================================
+   BOTON TIPOS
+===================================================== */
+
+.btnInfo{
+
+position:absolute;
+top:20px;
+right:20px;
+
+background:white;
+
+padding:10px 15px;
+
+border-radius:20px;
+
+text-decoration:none;
+
+color:#333;
+
+font-size:14px;
+
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+
+z-index:1000;
+
+transition:0.2s;
+
+}
+
+.btnInfo:hover{
+transform:scale(1.05);
+}
+
+/* =====================================================
+   ESTADISTICAS MAPA
+===================================================== */
+
+#stats{
+
+position:absolute;
+
+top:20px;
+left:20px;
+
+background:white;
+
+padding:15px;
+
+border-radius:15px;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+
+z-index:1000;
+
+width:150px;
+
+}
+
+.stat{
+
+font-size:14px;
+margin-bottom:8px;
+
+display:flex;
+justify-content:space-between;
+
+}
+
+/* =====================================================
+   FILTROS
+===================================================== */
+
+#filtros{
+
+position:absolute;
+
+top:140px;
+left:20px;
+
+background:white;
+
+padding:12px;
+
+border-radius:12px;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+
+z-index:1000;
+
+}
+
+#filtroCategoria{
+
+padding:8px;
+
+border-radius:8px;
+
+border:1px solid #ccc;
+
+}
+
+/* =====================================================
+   BOTON REPORTE
+===================================================== */
+
+#btnReporte{
+
+position:absolute;
+
+bottom:40px;
+left:50%;
+
+transform:translateX(-50%);
+
+width:70px;
+height:70px;
+
+border-radius:50%;
+
+background:#ffd000;
+
+font-size:40px;
+
+border:none;
+
+cursor:pointer;
+
+box-shadow:0 8px 20px rgba(0,0,0,0.3);
+
+z-index:1000;
+
+transition:0.3s;
+
+}
+
+#btnReporte:hover{
+
+transform:translateX(-50%) scale(1.1);
+
+}
+
+/* =====================================================
+   PANEL CREAR REPORTE
+===================================================== */
+
+#panelReporte{
+
+position:absolute;
+
+bottom:20px;
+left:50%;
+
+transform:translateX(-50%);
+
+background:#e7f3ff;
+
+padding:20px;
+
+border-radius:15px;
+
+width:400px;
+
+box-shadow:0 6px 20px rgba(0,0,0,0.2);
+
+z-index:1000;
+
+}
+
+#panelReporte h3{
+margin-top:0;
+}
+
+#panelReporte select,
+#panelReporte input{
+
+width:100%;
+margin-bottom:10px;
+
+padding:10px;
+
+border-radius:8px;
+
+border:1px solid #ccc;
+
+}
+
+#panelReporte button{
+
+width:100%;
+
+padding:12px;
+
+border:none;
+
+background:#0a4fff;
+
+color:white;
+
+border-radius:10px;
+
+cursor:pointer;
+
+font-weight:bold;
+
+}
+
+/* =====================================================
+   PIN REPORTES
+===================================================== */
+
+.pin{
+
+width:40px;
+height:40px;
+
+border-radius:50%;
+
+overflow:hidden;
+
+border:3px solid white;
+
+box-shadow:0 4px 10px rgba(0,0,0,0.4);
+
+}
+
+.pin-img{
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+
+}
+
+/* =====================================================
+   POPUP REPORTES
+===================================================== */
+
+.popupReporte{
+
+text-align:center;
+max-width:250px;
+
+}
+
+.popupReporte h3{
+margin-top:0;
+}
+
+.popupReporte img{
+
+width:100%;
+border-radius:10px;
+margin-top:10px;
+
+}
+
+/* =====================================================
+   CLUSTERS
+===================================================== */
+
+.cluster-circle{
+
+width:50px;
+height:50px;
+
+background:#ff5a5a;
+
+border-radius:50%;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+color:white;
+
+font-weight:bold;
+
+font-size:18px;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
+
+}
+
+/* =====================================================
+   TARJETAS TIPOS DE REPORTE
+===================================================== */
+
+.tipos-container{
+
+max-width:1200px;
+margin:auto;
+
+padding:40px;
+
+}
+
+.tipos-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+
+gap:25px;
+
+}
+
+.tipo-card{
+
+background:white;
+
+border-radius:20px;
+
+overflow:hidden;
+
+box-shadow:0 6px 20px rgba(0,0,0,0.15);
+
+transition:0.3s;
+
+cursor:pointer;
+
+}
+
+.tipo-card:hover{
+
+transform:translateY(-6px);
+
+}
+
+.tipo-card img{
+
+width:100%;
+height:150px;
+
+object-fit:cover;
+
+}
+
+.tipo-card-body{
+
+padding:15px;
+
+}
+
+.tipo-card-body h4{
+
+margin-top:0;
+
+}
+
+/* =====================================================
+   DASHBOARD
+===================================================== */
+
+.dashboard{
+
+max-width:1200px;
+margin:auto;
+
+padding:40px;
+
+}
+
+.dashboard-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:20px;
+
+}
+
+.card{
+
+background:white;
+
+padding:20px;
+
+border-radius:15px;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.15);
+
+}
+
+.card h2{
+
+margin:0;
+font-size:24px;
+
+}
+
+/* =====================================================
+   TABLAS
+===================================================== */
+
+table{
+
+width:100%;
+border-collapse:collapse;
+
+background:white;
+
+border-radius:10px;
+
+overflow:hidden;
+
+}
+
+table th{
+
+background:#f4f4f4;
+
+padding:10px;
+
+text-align:left;
+
+}
+
+table td{
+
+padding:10px;
+
+border-bottom:1px solid #eee;
+
+}
+
+/* =====================================================
+   BOTONES GENERALES
+===================================================== */
+
+.btn{
+
+display:inline-block;
+
+padding:10px 15px;
+
+background:#0a4fff;
+
+color:white;
+
+border-radius:8px;
+
+text-decoration:none;
+
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:768px){
+
+#panelReporte{
+
+width:90%;
+
+}
+
+#stats{
+
+width:auto;
+
+}
+
+}

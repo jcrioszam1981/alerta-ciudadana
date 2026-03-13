@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="utf-8">
+<title>Bachejoa Map</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<a href="tipos.html" class="btnInfo">Tipos de reporte</a>
+
+<div id="stats">
+
+<div class="stat stat-bache">
+🕳 Baches: <span id="baches">0</span>
+</div>
+
+<div class="stat stat-basura">
+🗑 Basura: <span id="basura">0</span>
+</div>
+
+<div class="stat stat-drenaje">
+🚰 Drenaje: <span id="drenaje">0</span>
+</div>
+
+</div>
+
+<div id="filtros">
+
+<select id="filtroCategoria">
+
+<option value="Todos">Todos</option>
+<option value="Bache">Bache</option>
+<option value="Basura">Basura</option>
+<option value="Drenaje">Drenaje</option>
+<option value="Agua">Agua</option>
+<option value="Luminaria">Luminaria</option>
+
+</select>
+
+</div>
+
+<button id="btnReporte">+</button>
+
+<div id="map"></div>
+
+<div id="panelReporte">
+
+<h3>Crear reporte</h3>
+
+<select id="categoria">
+
+<option value="Bache">Bache</option>
+<option value="Basura">Basura</option>
+<option value="Drenaje">Drenaje</option>
+<option value="Luminaria">Luminaria</option>
+<option value="Agua">Agua</option>
+
+</select>
+
+<select id="subtipo"></select>
+
+<input type="file" id="foto">
+
+<button id="btnUbicar">Seleccionar ubicación</button>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script src="map.js"></script>
+
+</body>
+</html>
