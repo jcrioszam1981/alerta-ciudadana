@@ -1,7 +1,7 @@
 // server.js  — Servidor principal Alerta Ciudadana v2.0
-
+ 
 require('dotenv').config();
-
+ 
 const express      = require('express');
 const cors         = require('cors');
 const helmet       = require('helmet');
@@ -9,18 +9,16 @@ const morgan       = require('morgan');
 const cookieParser = require('cookie-parser');
 const path         = require('path');
 const http         = require('http');
-
+ 
 const { initDB }       = require('./backend/db/database');
 const reportesRouter    = require('./backend/routes/reportes');
 const seguimientoRouter = require('./backend/routes/seguimiento');
 const authRouter       = require('./backend/routes/auth');
-
+ 
 const app    = express();
 const server = http.createServer(app);
 const PORT   = process.env.PORT || 3000;
-const setupRouter = require('./backend/routes/setup');
-app.use('/api/setup', setupRouter);
-
+ 
 // ── Middleware de seguridad ──────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: false,     // Leaflet necesita inline scripts
@@ -34,35 +32,37 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-
+ 
 // ── Rate limiting simple (sin dependencias externas) ─────────
 const requestCounts = new Map();
 app.use('/api', (req, res, next) => {
   const key   = req.ip;
   const now   = Date.now();
   const entry = requestCounts.get(key) || { count: 0, reset: now + 60000 };
-
+ 
   if (now > entry.reset) { entry.count = 0; entry.reset = now + 60000; }
   entry.count++;
   requestCounts.set(key, entry);
-
+ 
   if (entry.count > 120) {   // 120 req/min por IP
     return res.status(429).json({ error: 'Demasiadas solicitudes, espera un momento' });
   }
   next();
 });
-
+ 
 // ── Archivos estáticos ──────────────────────────────────────
 // index: false evita que Express sirva index.html automáticamente
 // así las rutas explícitas abajo controlan qué se muestra en /
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'frontend'), { index: false }));
-
+ 
 // ── Rutas API ────────────────────────────────────────────────
 app.use('/api/reportes', reportesRouter);
 app.use('/api/auth',       authRouter);
 app.use('/api/seguimiento', seguimientoRouter);
-
+const setupRouter = require('./backend/routes/setup');
+app.use('/api/setup', setupRouter);
+ 
 // ── Rutas frontend (SPA fallback) ────────────────────────────
 app.get('/admin*', (req, res) =>
   res.sendFile(path.join(__dirname, 'frontend', 'admin.html'))
@@ -80,12 +80,12 @@ app.get('/', (req, res) =>
 app.get('*', (req, res) =>
   res.sendFile(path.join(__dirname, 'frontend', 'index.html'))
 );
-
+ 
 // ── Health check ─────────────────────────────────────────────
 app.get('/api/health', (_, res) =>
   res.json({ status: 'ok', version: '2.0.0', timestamp: new Date().toISOString() })
 );
-
+ 
 // ── Manejo de errores global ──────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.message);
@@ -94,7 +94,7 @@ app.use((err, req, res, next) => {
   }
   res.status(500).json({ error: 'Error interno del servidor' });
 });
-
+ 
 // ── Arranque ─────────────────────────────────────────────────
 async function start() {
   try {
@@ -111,5 +111,5 @@ async function start() {
     process.exit(1);
   }
 }
-
+ 
 start();
