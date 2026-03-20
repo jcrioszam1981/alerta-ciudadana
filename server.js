@@ -18,6 +18,8 @@ const authRouter       = require('./backend/routes/auth');
 const app    = express();
 const server = http.createServer(app);
 const PORT   = process.env.PORT || 3000;
+const setupRouter = require('./backend/routes/setup');
+app.use('/api/setup', setupRouter);
 
 // ── Middleware de seguridad ──────────────────────────────────
 app.use(helmet({
