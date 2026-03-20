@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#ffffff"/>
+  <title>Alerta Ciudadana</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --white:#fff; --off:#f7f8fa; --border:#e4e7ed; --muted:#8b93a5;
+      --text:#1a1f2e; --text2:#4a5168;
+      --blue:#2563eb; --blue-lt:#eff4ff; --blue-d:#1d4ed8;
+      --green:#16a34a; --amber:#d97706; --red:#dc2626;
+      --c-bache:#ef4444; --c-basura:#8b5cf6; --c-drenaje:#0ea5e9;
+      --c-agua:#10b981; --c-luminaria:#f59e0b; --c-otro:#6b7280;
+      --r:14px; --rsm:9px;
+      --s1:0 1px 4px rgba(0,0,0,.08);
+      --s2:0 4px 20px rgba(0,0,0,.11);
+      --s3:0 12px 40px rgba(0,0,0,.15);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;overflow:hidden;background:#e8eaee;}
+
+    /* ── MAPA ── */
+    #map{position:fixed;inset:0;z-index:0;}
+
+    /* ── TOPBAR ── */
+    #topbar{
+      position:fixed;top:12px;left:12px;right:12px;z-index:500;
+      display:flex;align-items:center;gap:8px;pointer-events:none;
+    }
+    #topbar>*{pointer-events:all;}
+    .brand{
+      display:flex;align-items:center;gap:8px;
+      background:var(--white);border-radius:var(--r);
+      padding:8px 14px;box-shadow:var(--s2);
+    }
+    .brand-logo{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    .brand-name{font-size:.9rem;font-weight:700;color:var(--text);letter-spacing:-.02em;white-space:nowrap;}
+    .brand-city{font-size:.68rem;font-weight:600;color:var(--muted);background:var(--off);padding:2px 8px;border-radius:20px;}
+    .srch{flex:1;max-width:300px;position:relative;}
+    .srch input{
+      width:100%;padding:10px 12px 10px 36px;
+      background:var(--white);border:none;border-radius:var(--r);
+      box-shadow:var(--s2);font-family:inherit;font-size:.86rem;color:var(--text);outline:none;
+    }
+    .srch input::placeholder{color:var(--muted);}
+    .srch .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;}
+    .sp{flex:1;}
+    .tbtn{
+      display:flex;align-items:center;gap:5px;
+      padding:9px 14px;background:var(--white);border:none;
+      border-radius:var(--r);box-shadow:var(--s2);
+      font-family:inherit;font-size:.84rem;font-weight:600;
+      color:var(--text2);cursor:pointer;transition:background .15s;white-space:nowrap;
+    }
+    .tbtn:hover{background:var(--off);}
+    .tbtn.cta{background:var(--blue);color:var(--white);}
+    .tbtn.cta:hover{background:var(--blue-d);}
+    @media(max-width:600px){.srch,.brand-city,.brand-name{display:none;}.brand{padding:8px 10px;}}
+
+    /* ── PANEL LATERAL IZQ ── */
+    #lpanel{position:fixed;top:72px;left:12px;z-index:500;display:flex;flex-direction:column;gap:6px;}
+    .spbtn{
+      width:42px;height:42px;background:var(--white);border:none;
+      border-radius:11px;box-shadow:var(--s1);font-size:1.1rem;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:all .15s;position:relative;
+    }
+    .spbtn:hover{background:var(--off);transform:scale(1.05);}
+    .spbtn.on{background:var(--blue);box-shadow:0 4px 14px rgba(37,99,235,.35);}
+    .tip{
+      position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);
+      background:var(--text);color:var(--white);
+      font-size:.69rem;font-weight:600;padding:4px 9px;border-radius:6px;
+      white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;
+    }
+    .spbtn:hover .tip{opacity:1;}
+
+    /* ── STATS BOX DER ── */
+    #sbox{
+      position:fixed;top:72px;right:12px;
+      background:var(--white);border-radius:var(--r);
+      box-shadow:var(--s2);padding:10px 14px;z-index:500;min-width:155px;
+    }
+    .sr{display:flex;align-items:center;gap:8px;padding:4px 0;}
+    .sr+.sr{border-top:1px solid var(--border);margin-top:2px;padding-top:6px;}
+    .sd{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+    .sl{font-size:.76rem;color:var(--text2);flex:1;}
+    .sn{font-size:.8rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);}
+    @media(max-width:640px){#sbox{display:none;}}
+
+    /* ── FILTROS CATEGORÍA ── */
+    #catbar{
+      position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+      z-index:500;display:flex;gap:5px;
+      background:var(--white);padding:5px;
+      border-radius:50px;box-shadow:var(--s3);
+    }
+    .cb{
+      display:flex;align-items:center;gap:5px;
+      padding:7px 13px;border:none;border-radius:50px;
+      background:transparent;font-family:inherit;
+      font-size:.79rem;font-weight:600;color:var(--text2);
+      cursor:pointer;transition:all .15s;white-space:nowrap;
+    }
+    .cb:hover{background:var(--off);}
+    .cb.on{background:var(--text);color:var(--white);}
+    .cb.on[data-t="bache"]    {background:var(--c-bache);}
+    .cb.on[data-t="basura"]   {background:var(--c-basura);}
+    .cb.on[data-t="drenaje"]  {background:var(--c-drenaje);}
+    .cb.on[data-t="agua"]     {background:var(--c-agua);}
+    .cb.on[data-t="luminaria"]{background:var(--c-luminaria);}
+    .cd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+    @media(max-width:650px){
+      #catbar{bottom:74px;left:8px;right:8px;transform:none;border-radius:var(--r);overflow-x:auto;justify-content:flex-start;}
+      .cb{flex-shrink:0;}
+    }
+
+    /* ── PIN CENTRAL ── */
+    #cpin{
+      position:fixed;top:50%;left:50%;
+      transform:translate(-50%, -100%) translateY(-8px);
+      pointer-events:none;z-index:700;display:none;text-align:center;
+    }
+    #cpin.show{display:block;}
+    .cpin-ico{font-size:2.6rem;filter:drop-shadow(0 4px 10px rgba(37,99,235,.5));animation:cpb .7s ease-in-out infinite alternate;}
+    .cpin-lbl{background:var(--blue);color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;margin-top:2px;}
+    @keyframes cpb{from{transform:translateY(0);}to{transform:translateY(-6px);}}
+
+    /* ── MINI-BARRA (modo mover pin) ── */
+    #minibar{
+      position:fixed;bottom:0;left:0;right:0;z-index:950;
+      background:var(--white);border-radius:20px 20px 0 0;
+      box-shadow:0 -4px 20px rgba(0,0,0,.12);
+      padding:14px 20px max(14px,env(safe-area-inset-bottom));
+      display:none;align-items:center;gap:12px;
+    }
+    #minibar.show{display:flex;}
+    .mini-info{flex:1;}
+    .mini-coords{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2);}
+    .mini-hint{font-size:.72rem;color:var(--muted);margin-top:1px;}
+    .btn-confirm{
+      padding:10px 18px;background:var(--blue);color:#fff;
+      border:none;border-radius:10px;font-family:inherit;
+      font-size:.86rem;font-weight:700;cursor:pointer;
+      white-space:nowrap;transition:background .15s;
+    }
+    .btn-confirm:hover{background:var(--blue-d);}
+
+    /* ── OVERLAY ── */
+    .ov{
+      position:fixed;inset:0;background:rgba(10,15,30,.3);
+      backdrop-filter:blur(2px);z-index:800;
+      opacity:0;pointer-events:none;transition:opacity .22s;
+    }
+    .ov.open{opacity:1;pointer-events:all;}
+
+    /* ── DRAWER BASE ── */
+    .drawer{
+      position:fixed;bottom:0;left:0;right:0;z-index:900;
+      background:var(--white);border-radius:20px 20px 0 0;
+      box-shadow:0 -6px 32px rgba(0,0,0,.12);
+      transform:translateY(100%);
+      transition:transform .32s cubic-bezier(.32,.72,0,1);
+      max-height:92vh;overflow-y:auto;
+    }
+    .drawer.open{transform:translateY(0);}
+    @media(min-width:580px){
+      .drawer{left:50%;right:auto;width:480px;transform:translateX(-50%) translateY(100%);}
+      .drawer.open{transform:translateX(-50%) translateY(0);}
+      #minibar{left:50%;right:auto;width:480px;border-radius:20px 20px 0 0;}
+    }
+    .dh{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0;}
+    .dhead{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:13px 20px 11px;border-bottom:1px solid var(--border);
+    }
+    .dtitle{font-size:1rem;font-weight:700;color:var(--text);}
+    .dsub{font-size:.75rem;color:var(--muted);margin-top:1px;}
+    .bx{
+      width:30px;height:30px;border-radius:50%;background:var(--off);
+      border:none;font-size:1rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;color:var(--text2);
+    }
+    .bx:hover{background:var(--border);}
+    .dbody{padding:15px 20px 30px;}
+
+    /* ── FORM ── */
+    .flbl{font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:9px;}
+    .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px;}
+    .ttile{
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      padding:11px 5px;border:2px solid var(--border);border-radius:12px;
+      cursor:pointer;transition:all .16s;background:var(--white);
+    }
+    .ttile:hover{border-color:#c5cad6;background:var(--off);}
+    .ttile.sel{border-color:currentColor;}
+    .ttile[data-t="bache"]    {color:var(--c-bache);}
+    .ttile[data-t="basura"]   {color:var(--c-basura);}
+    .ttile[data-t="drenaje"]  {color:var(--c-drenaje);}
+    .ttile[data-t="agua"]     {color:var(--c-agua);}
+    .ttile[data-t="luminaria"]{color:var(--c-luminaria);}
+    .ttile[data-t="otro"]     {color:var(--c-otro);}
+    .ttile.sel{background:color-mix(in srgb,currentColor 8%,white);}
+    .ti{font-size:1.6rem;line-height:1;}
+    .tl{font-size:.73rem;font-weight:600;color:var(--text2);}
+    .ttile.sel .tl{color:currentColor;}
+
+    .fi{margin-bottom:11px;}
+    .fi label{display:block;font-size:.74rem;font-weight:600;color:var(--text2);margin-bottom:4px;}
+    .fi input,.fi select,.fi textarea{
+      width:100%;padding:9px 11px;border:1.5px solid var(--border);
+      border-radius:var(--rsm);font-family:inherit;font-size:.86rem;
+      color:var(--text);background:var(--white);outline:none;
+      transition:border-color .15s;-webkit-appearance:none;
+    }
+    .fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--blue);}
+    .fi textarea{resize:none;height:70px;}
+
+    /* Caja de ubicación con botón "Mover pin" */
+    .locbox{
+      border:1.5px solid var(--border);border-radius:var(--rsm);overflow:hidden;
+    }
+    .locrow{
+      display:flex;align-items:center;gap:9px;
+      padding:9px 11px;background:var(--off);
+    }
+    .lp{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+    .lp.ok  {background:var(--green);box-shadow:0 0 0 3px rgba(22,163,74,.2);}
+    .lp.wait{background:var(--amber);animation:lpulse 1.4s infinite;}
+    .lp.err {background:var(--red);}
+    @keyframes lpulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+    .lcoords{font-family:'DM Mono',monospace;font-size:.76rem;color:var(--text2);flex:1;}
+    .lrefresh{background:none;border:none;color:var(--blue);font-size:.78rem;cursor:pointer;font-weight:700;padding:2px 4px;}
+
+    .locactions{
+      display:flex;border-top:1px solid var(--border);
+    }
+    .locbtn{
+      flex:1;padding:8px;background:none;border:none;
+      font-family:inherit;font-size:.78rem;font-weight:600;
+      color:var(--blue);cursor:pointer;transition:background .15s;
+      display:flex;align-items:center;justify-content:center;gap:4px;
+    }
+    .locbtn:hover{background:var(--blue-lt);}
+    .locbtn+.locbtn{border-left:1px solid var(--border);}
+
+    /* Foto */
+    .pz{
+      position:relative;border:1.5px dashed var(--border);
+      border-radius:var(--rsm);padding:14px;text-align:center;
+      cursor:pointer;background:var(--off);overflow:hidden;transition:all .16s;
+    }
+    .pz:hover{border-color:var(--blue);background:var(--blue-lt);}
+    .pz input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+    .pz-ico{font-size:1.3rem;margin-bottom:3px;}
+    .pz p{font-size:.76rem;color:var(--muted);}
+    .pz p b{color:var(--blue);}
+    #pz-img{display:none;width:100%;height:88px;object-fit:cover;border-radius:7px;}
+
+    .btn-env{
+      width:100%;padding:13px;background:var(--blue);color:#fff;
+      border:none;border-radius:var(--r);font-family:inherit;
+      font-size:.92rem;font-weight:700;cursor:pointer;margin-top:14px;
+      display:flex;align-items:center;justify-content:center;gap:7px;
+      transition:all .17s;
+    }
+    .btn-env:hover{background:var(--blue-d);}
+    .btn-env:active{transform:scale(.98);}
+    .btn-env:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* ── DETALLE ── */
+    .det-body{padding:14px 20px 30px;}
+    .det-top{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+    .det-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.76rem;font-weight:700;}
+    .det-est{margin-left:auto;padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+    .est-reportado  {background:#fee2e2;color:#dc2626;}
+    .est-revision   {background:#fef3c7;color:#d97706;}
+    .est-proceso    {background:#ffedd5;color:#ea580c;}
+    .est-solucionado{background:#dcfce7;color:#16a34a;}
+    .est-cancelado  {background:#f1f5f9;color:#64748b;}
+    .det-folio{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:5px;}
+    .det-desc{font-size:.87rem;color:var(--text2);line-height:1.55;margin-bottom:10px;}
+    .det-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin-bottom:14px;}
+    .dtl{position:relative;padding-left:18px;}
+    .dtl::before{content:'';position:absolute;left:5px;top:8px;bottom:0;width:1.5px;background:var(--border);}
+    .dtl-i{position:relative;margin-bottom:9px;}
+    .dtl-d{position:absolute;left:-17px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--blue);}
+    .dtl-lbl{font-size:.81rem;font-weight:600;color:var(--text);}
+    .dtl-m{font-size:.71rem;color:var(--muted);}
+    .dtl-c{font-size:.78rem;color:var(--text2);margin-top:2px;}
+    .btn-vote{
+      width:100%;padding:11px;background:var(--off);
+      border:1.5px solid var(--border);border-radius:var(--r);
+      font-family:inherit;font-size:.86rem;font-weight:600;color:var(--text2);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .16s;
+    }
+    .btn-vote:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);}
+
+    /* ── POPUP LEAFLET ── */
+    .leaflet-popup-content-wrapper{background:var(--white)!important;border-radius:var(--r)!important;box-shadow:var(--s3)!important;padding:0!important;border:1px solid var(--border)!important;}
+    .leaflet-popup-content{margin:0!important;}
+    .leaflet-popup-tip{background:var(--white)!important;}
+    .leaflet-popup-close-button{color:var(--muted)!important;right:8px!important;top:8px!important;font-size:16px!important;}
+    .leaflet-control-zoom{border:none!important;box-shadow:var(--s2)!important;}
+    .leaflet-control-zoom a{background:var(--white)!important;color:var(--text)!important;border:none!important;width:36px!important;height:36px!important;line-height:36px!important;font-size:1rem!important;}
+    .leaflet-control-zoom a:hover{background:var(--off)!important;}
+    .leaflet-control-zoom-in{border-radius:10px 10px 0 0!important;}
+    .leaflet-control-zoom-out{border-radius:0 0 10px 10px!important;}
+    .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:none!important;}
+    .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:none!important;}
+    .pop{min-width:170px;max-width:235px;}
+    .pop-img{width:100%;height:90px;object-fit:cover;border-radius:var(--r) var(--r) 0 0;display:block;}
+    .pop-body{padding:9px 11px 11px;}
+    .pop-tipo{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+    .pop-desc{font-size:.8rem;color:var(--text2);margin:3px 0 6px;line-height:1.4;}
+    .pop-row{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);}
+    .pf{font-family:'DM Mono',monospace;font-size:.67rem;}
+    .pop-btn{width:100%;margin-top:7px;padding:7px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.76rem;font-weight:700;cursor:pointer;}
+    .pop-btn:hover{background:var(--blue-d);}
+
+    /* ── TOAST ── */
+    #toasts{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:5px;pointer-events:none;}
+    .toast{background:var(--text);color:#fff;padding:9px 16px;border-radius:50px;font-size:.82rem;font-weight:500;box-shadow:var(--s3);animation:tpop .27s ease;pointer-events:all;white-space:nowrap;display:flex;align-items:center;gap:7px;}
+    .toast.ok{background:var(--green);}
+    .toast.err{background:var(--red);}
+    @keyframes tpop{from{opacity:0;transform:translateY(-8px) scale(.96);}to{opacity:1;transform:none;}}
+
+    /* ── MOBILE NAV ── */
+    #mobnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--white);border-top:1px solid var(--border);padding:5px 0 max(5px,env(safe-area-inset-bottom));}
+    @media(max-width:480px){#mobnav{display:flex;}}
+    .mn{display:flex;width:100%;}
+    .mni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-family:inherit;font-size:.58rem;font-weight:600;color:var(--muted);cursor:pointer;padding:3px 0;}
+    .mni.a{color:var(--blue);}
+    .mni-ico{font-size:1.2rem;}
+    .mni-rep{color:var(--blue);}
+    .mni-rep .mni-ico{font-size:1.4rem;background:var(--blue);color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1px;box-shadow:0 4px 12px rgba(37,99,235,.4);}
+
+    @keyframes ping{0%{transform:scale(1);opacity:.7;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.2);opacity:0;}}
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="brand">
+    <div class="brand-logo">🏛️</div>
+    <span class="brand-name">Alerta Ciudadana</span>
+    <span class="brand-city">Smart City</span>
+  </div>
+  <div class="srch">
+    <span class="si">🔍</span>
+    <input type="text" placeholder="Buscar colonia, calle..." oninput="buscar(this.value)"/>
+  </div>
+  <div class="sp"></div>
+  <button class="tbtn" onclick="window.open('/admin.html','_blank')">⚙️ Admin</button>
+  <button class="tbtn cta" onclick="abrirNuevo()">＋ Reportar</button>
+</div>
+
+<!-- PANEL IZQUIERDO -->
+<div id="lpanel">
+  <button class="spbtn" onclick="irGPS()">📍<span class="tip">Mi ubicación</span></button>
+  <button class="spbtn" id="btn-heat" onclick="toggleHeat()">🔥<span class="tip">Mapa de calor</span></button>
+  <button class="spbtn" id="btn-sat"  onclick="toggleSat()">🛰️<span class="tip">Satélite</span></button>
+  <button class="spbtn" onclick="refreshAll()">↻<span class="tip">Actualizar</span></button>
+</div>
+
+<!-- STATS -->
+<div id="sbox">
+  <div class="sr">
+    <span class="sd" style="background:var(--text)"></span>
+    <span class="sl">Total reportes</span>
+    <span class="sn" id="st-total">—</span>
+  </div>
+  <div id="st-tipos"></div>
+</div>
+
+<!-- FILTROS -->
+<div id="catbar">
+  <button class="cb on" data-t="todos"     onclick="setF('todos',this)">Todos</button>
+  <button class="cb"    data-t="bache"     onclick="setF('bache',this)"><span class="cd" style="background:var(--c-bache)"></span>Baches</button>
+  <button class="cb"    data-t="basura"    onclick="setF('basura',this)"><span class="cd" style="background:var(--c-basura)"></span>Basura</button>
+  <button class="cb"    data-t="drenaje"   onclick="setF('drenaje',this)"><span class="cd" style="background:var(--c-drenaje)"></span>Drenaje</button>
+  <button class="cb"    data-t="agua"      onclick="setF('agua',this)"><span class="cd" style="background:var(--c-agua)"></span>Agua</button>
+  <button class="cb"    data-t="luminaria" onclick="setF('luminaria',this)"><span class="cd" style="background:var(--c-luminaria)"></span>Luminaria</button>
+</div>
+
+<!-- PIN CENTRAL (modo mover) -->
+<div id="cpin">
+  <div class="cpin-ico">📌</div>
+  <div class="cpin-lbl">Mueve el mapa para ubicar</div>
+</div>
+
+<!-- MINI-BARRA confirmación de pin -->
+<div id="minibar">
+  <div class="mini-info">
+    <div class="mini-coords" id="mini-coords">—</div>
+    <div class="mini-hint">Ajusta el mapa y confirma</div>
+  </div>
+  <button class="btn-confirm" onclick="confirmarPin()">✓ Confirmar ubicación</button>
+</div>
+
+<!-- OVERLAY + DRAWER NUEVO REPORTE -->
+<div class="ov" id="ov-nuevo" onclick="cerrarNuevo()"></div>
+<div class="drawer" id="drawer-nuevo">
+  <div class="dh"></div>
+  <div class="dhead">
+    <div>
+      <div class="dtitle">Nuevo reporte</div>
+      <div class="dsub">Categoriza y ubica el problema</div>
+    </div>
+    <button class="bx" onclick="cerrarNuevo()">✕</button>
+  </div>
+  <div class="dbody">
+    <form id="form-rep" onsubmit="enviar(event)">
+
+      <div class="flbl">Categoría del problema</div>
+      <div class="tgrid">
+        <div class="ttile" data-t="bache"     onclick="pickTipo('bache',this)"><span class="ti">🕳️</span><span class="tl">Bache</span></div>
+        <div class="ttile" data-t="basura"    onclick="pickTipo('basura',this)"><span class="ti">🗑️</span><span class="tl">Basura</span></div>
+        <div class="ttile" data-t="drenaje"   onclick="pickTipo('drenaje',this)"><span class="ti">🌊</span><span class="tl">Drenaje</span></div>
+        <div class="ttile" data-t="agua"      onclick="pickTipo('agua',this)"><span class="ti">💧</span><span class="tl">Agua</span></div>
+        <div class="ttile" data-t="luminaria" onclick="pickTipo('luminaria',this)"><span class="ti">💡</span><span class="tl">Luminaria</span></div>
+        <div class="ttile" data-t="otro"      onclick="pickTipo('otro',this)"><span class="ti">⚠️</span><span class="tl">Otro</span></div>
+      </div>
+      <input type="hidden" id="f-tipo" required/>
+
+      <div class="fi">
+        <label>Subtipo</label>
+        <select id="f-sub"><option value="">Selecciona subtipo...</option></select>
+      </div>
+      <div class="fi">
+        <label>Descripción</label>
+        <textarea id="f-desc" placeholder="Describe el problema brevemente..."></textarea>
+      </div>
+
+      <div class="fi">
+        <label>Ubicación del problema</label>
+        <div class="locbox">
+          <div class="locrow">
+            <span class="lp wait" id="lp"></span>
+            <span class="lcoords" id="lc-txt">Obteniendo GPS...</span>
+            <button type="button" class="lrefresh" onclick="pedirGPS()">↻</button>
+          </div>
+          <div class="locactions">
+            <button type="button" class="locbtn" onclick="usarGPS()">📍 Usar mi GPS</button>
+            <button type="button" class="locbtn" onclick="iniciarMoverPin()">🗺️ Mover en mapa</button>
+          </div>
+        </div>
+        <input type="hidden" id="f-lat" required/>
+        <input type="hidden" id="f-lng" required/>
+      </div>
+
+      <div class="fi">
+        <label>Foto <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+        <div class="pz">
+          <input type="file" id="f-foto" accept="image/*" capture="environment" onchange="prevFoto(this)"/>
+          <img id="pz-img"/>
+          <div id="pz-ph"><div class="pz-ico">📷</div><p><b>Toca para añadir foto</b> o elige una</p></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-env" id="btn-env">
+        <span>📤</span> Enviar reporte
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- OVERLAY + DRAWER DETALLE -->
+<div class="ov" id="ov-det" onclick="cerrarDet()"></div>
+<div class="drawer" id="drawer-det">
+  <div class="dh"></div>
+  <div id="det-content"></div>
+</div>
+
+<!-- MOBILE NAV -->
+<div id="mobnav">
+  <nav class="mn">
+    <button class="mni a" onclick="this.classList.add('a')"><span class="mni-ico">🗺️</span>Mapa</button>
+    <button class="mni" onclick="irGPS()"><span class="mni-ico">📍</span>GPS</button>
+    <button class="mni mni-rep" onclick="abrirNuevo()"><div class="mni-ico">＋</div>Reportar</button>
+    <button class="mni" onclick="toggleHeat()"><span class="mni-ico">🔥</span>Calor</button>
+    <button class="mni" onclick="window.location='/admin.html'"><span class="mni-ico">⚙️</span>Admin</button>
+  </nav>
+</div>
+
+<div id="toasts"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

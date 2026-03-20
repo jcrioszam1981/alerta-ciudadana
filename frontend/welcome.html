@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#050810"/>
+  <title>Alerta Ciudadana — Plataforma Smart City</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #050810;
+      --bg2:     #0c1120;
+      --bg3:     #111827;
+      --border:  rgba(255,255,255,.08);
+      --border2: rgba(255,255,255,.14);
+      --text:    #f1f5f9;
+      --muted:   #64748b;
+      --muted2:  #94a3b8;
+ 
+      --sky:    #38bdf8;
+      --sky2:   #0ea5e9;
+      --green:  #34d399;
+      --green2: #10b981;
+      --amber:  #fbbf24;
+      --red:    #f87171;
+      --purple: #a78bfa;
+      --pink:   #f472b6;
+ 
+      --c-bache:    #f87171;
+      --c-basura:   #a78bfa;
+      --c-drenaje:  #38bdf8;
+      --c-agua:     #34d399;
+      --c-luminaria:#fbbf24;
+      --c-otro:     #94a3b8;
+    }
+ 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+ 
+    /* ══ NOISE OVERLAY ══════════════════════════════════════════ */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      opacity: .025;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+ 
+    /* ══ NAV ════════════════════════════════════════════════════ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 32px;
+      background: rgba(5,8,16,.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--sky2), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .nav-name {
+      font-family: 'Unbounded', sans-serif;
+      font-size: .82rem; font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .nav-live {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px;
+      background: rgba(52,211,153,.1);
+      border: 1px solid rgba(52,211,153,.25);
+      font-size: .68rem; font-weight: 600; color: var(--green);
+    }
+    .nav-live .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: blink 1.4s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .nav-r { margin-left: auto; display: flex; gap: 8px; }
+    .nbtn {
+      padding: 8px 16px; border-radius: 9px; font-family: inherit;
+      font-size: .82rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: all .18s;
+      border: 1px solid var(--border2);
+      background: transparent; color: var(--muted2);
+    }
+    .nbtn:hover { background: rgba(255,255,255,.06); color: var(--text); }
+    .nbtn.cta {
+      background: linear-gradient(135deg, var(--sky2), var(--purple));
+      color: white; border-color: transparent;
+    }
+    .nbtn.cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    @media(max-width:600px){ nav { padding: 12px 16px; } .nav-live span { display:none; } }
+ 
+    /* ══ HERO FLYER ═════════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 40px;
+      padding: 120px 64px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    @media(max-width:900px){
+      .hero { grid-template-columns:1fr; padding: 100px 20px 60px; }
+    }
+ 
+    /* Blobs de fondo */
+    .blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); pointer-events: none; opacity: .18;
+    }
+    .blob-1 { width:500px;height:500px;background:var(--sky2);  top:-100px;left:-100px; animation: drift1 12s ease-in-out infinite alternate; }
+    .blob-2 { width:400px;height:400px;background:var(--purple);bottom:-80px;right:-80px; animation: drift2 10s ease-in-out infinite alternate; }
+    .blob-3 { width:300px;height:300px;background:var(--green2);top:40%;left:40%; animation: drift3 14s ease-in-out infinite alternate; }
+    @keyframes drift1 { to { transform: translate(60px, 40px) scale(1.1); } }
+    @keyframes drift2 { to { transform: translate(-40px, -60px) scale(1.15); } }
+    @keyframes drift3 { to { transform: translate(30px, -50px) scale(.9); } }
+ 
+    /* ── Lado izquierdo del hero ── */
+    .hero-left { position: relative; z-index: 2; }
+ 
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 20px;
+      background: rgba(56,189,248,.1);
+      border: 1px solid rgba(56,189,248,.25);
+      font-size: .72rem; font-weight: 600; color: var(--sky);
+      margin-bottom: 24px;
+      animation: fadeUp .5s ease both;
+    }
+ 
+    .hero-h1 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -.04em;
+      margin-bottom: 20px;
+      animation: fadeUp .5s .1s ease both;
+    }
+    .hero-h1 .line-sky  { color: var(--sky); }
+    .hero-h1 .line-grd  {
+      background: linear-gradient(90deg, var(--green), var(--sky));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+ 
+    .hero-p {
+      font-size: 1rem; color: var(--muted2); line-height: 1.7;
+      max-width: 440px; margin-bottom: 36px;
+      animation: fadeUp .5s .2s ease both;
+    }
+ 
+    .hero-btns {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      animation: fadeUp .5s .3s ease both;
+    }
+    .hbtn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 26px; border-radius: 12px;
+      font-family: inherit; font-size: .94rem; font-weight: 700;
+      cursor: pointer; text-decoration: none; border: none;
+      transition: all .2s;
+    }
+    .hbtn.primary {
+      background: linear-gradient(135deg, var(--sky2), #6366f1);
+      color: white;
+      box-shadow: 0 8px 28px rgba(14,165,233,.35);
+    }
+    .hbtn.primary:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(14,165,233,.4); }
+    .hbtn.ghost {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border2); color: var(--text);
+    }
+    .hbtn.ghost:hover { background: rgba(255,255,255,.1); }
+ 
+    /* Contadores hero */
+    .hero-nums {
+      display: flex; gap: 28px; margin-top: 44px;
+      animation: fadeUp .5s .4s ease both;
+    }
+    .hnum .n {
+      font-family: 'DM Mono', monospace;
+      font-size: 2rem; font-weight: 700;
+      background: linear-gradient(90deg, var(--text), var(--muted2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; line-height: 1;
+    }
+    .hnum .l { font-size: .69rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+    .hnum-div { width: 1px; background: var(--border2); align-self: stretch; }
+ 
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(24px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+ 
+    /* ── Flyer / Panel derecho del hero ── */
+    .hero-flyer {
+      position: relative; z-index: 2;
+      animation: fadeUp .6s .2s ease both;
+    }
+ 
+    .flyer-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+    }
+ 
+    .flyer-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .flyer-dots { display: flex; gap: 6px; }
+    .flyer-dots span { width: 10px; height: 10px; border-radius: 50%; }
+    .flyer-title-bar { font-size: .78rem; font-weight: 600; color: var(--muted2); flex: 1; text-align: center; }
+    .flyer-live-badge {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.2);
+      border-radius: 20px; padding: 3px 9px;
+      font-size: .65rem; font-weight: 700; color: var(--green);
+    }
+ 
+    /* Mapa mini dentro del flyer */
+    .flyer-map-wrap { height: 220px; position: relative; }
+    #flyer-map { height: 100%; width: 100%; }
+    .flyer-map-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 60%, rgba(5,8,16,.9) 100%);
+      pointer-events: none; z-index: 2;
+    }
+ 
+    /* Stats dentro del flyer */
+    .flyer-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border);
+    }
+    .fstat {
+      background: var(--bg2);
+      padding: 12px 10px; text-align: center;
+    }
+    .fstat .n {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.5rem; font-weight: 700; line-height: 1;
+    }
+    .fstat .l { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
+ 
+    /* Feed dentro del flyer */
+    .flyer-feed {
+      padding: 10px;
+      display: flex; flex-direction: column; gap: 6px;
+      max-height: 220px; overflow: hidden;
+    }
+    .ff-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 10px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.05);
+      animation: slideR .4s ease;
+      transition: background .2s;
+      cursor: default;
+    }
+    .ff-item:hover { background: rgba(255,255,255,.06); }
+    @keyframes slideR {
+      from { opacity:0; transform: translateX(20px); }
+      to   { opacity:1; transform: translateX(0); }
+    }
+    .ff-ico {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .ff-body { flex: 1; min-width: 0; }
+    .ff-top { display: flex; align-items: center; gap: 5px; margin-bottom: 1px; }
+    .ff-tipo { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .ff-badge {
+      padding: 1px 6px; border-radius: 8px;
+      font-size: .6rem; font-weight: 700; text-transform: uppercase;
+    }
+    .ff-desc { font-size: .73rem; color: var(--muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ff-time { font-size: .62rem; color: var(--muted); flex-shrink: 0; }
+ 
+    /* ══ SECCIÓN CATEGORÍAS ═════════════════════════════════════ */
+    .section-cats {
+      padding: 80px 64px;
+      background: var(--bg2);
+      position: relative;
+    }
+    @media(max-width:768px){ .section-cats { padding: 60px 20px; } }
+ 
+    .sec-head {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 36px; flex-wrap: wrap; gap: 12px;
+    }
+    .sec-tag {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--sky); margin-bottom: 6px;
+    }
+    .sec-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 800; letter-spacing: -.03em;
+    }
+    .sec-link {
+      font-size: .82rem; font-weight: 600; color: var(--sky);
+      text-decoration: none; display: flex; align-items: center; gap: 4px;
+    }
+    .sec-link:hover { text-decoration: underline; }
+ 
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+ 
+    .cat-card {
+      border-radius: 16px;
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .22s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      position: relative;
+    }
+    .cat-card::before {
+      content: '';
+      position: absolute; inset: 0; opacity: 0;
+      background: linear-gradient(135deg, currentColor 0%, transparent 70%);
+      transition: opacity .22s;
+    }
+    .cat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(0,0,0,.4); border-color: currentColor; }
+    .cat-card:hover::before { opacity: .07; }
+ 
+    .cat-img {
+      height: 130px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem; position: relative; overflow: hidden;
+    }
+    /* Fondo por tipo */
+    .cat-card[data-c="bache"]     { color: var(--c-bache);     } .cat-card[data-c="bache"]     .cat-img { background: linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.04)); }
+    .cat-card[data-c="basura"]    { color: var(--c-basura);    } .cat-card[data-c="basura"]    .cat-img { background: linear-gradient(135deg,rgba(167,139,250,.15),rgba(167,139,250,.04)); }
+    .cat-card[data-c="drenaje"]   { color: var(--c-drenaje);   } .cat-card[data-c="drenaje"]   .cat-img { background: linear-gradient(135deg,rgba(56,189,248,.15),rgba(56,189,248,.04)); }
+    .cat-card[data-c="agua"]      { color: var(--c-agua);      } .cat-card[data-c="agua"]      .cat-img { background: linear-gradient(135deg,rgba(52,211,153,.15),rgba(52,211,153,.04)); }
+    .cat-card[data-c="luminaria"] { color: var(--c-luminaria); } .cat-card[data-c="luminaria"] .cat-img { background: linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.04)); }
+    .cat-card[data-c="otro"]      { color: var(--c-otro);      } .cat-card[data-c="otro"]      .cat-img { background: linear-gradient(135deg,rgba(148,163,184,.15),rgba(148,163,184,.04)); }
+ 
+    .cat-ico {
+      font-size: 3.2rem;
+      filter: drop-shadow(0 4px 14px rgba(0,0,0,.3));
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .cat-card:hover .cat-ico { transform: scale(1.2) rotate(-5deg); }
+ 
+    .cat-body { padding: 14px 16px 16px; }
+    .cat-name { font-family: 'Unbounded', sans-serif; font-size: .88rem; font-weight: 700; margin-bottom: 4px; }
+    .cat-desc { font-size: .76rem; color: var(--muted2); line-height: 1.5; margin-bottom: 10px; }
+    .cat-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .cat-chip {
+      padding: 2px 8px; border-radius: 20px; font-size: .64rem; font-weight: 600;
+      background: rgba(255,255,255,.06); color: var(--muted2);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .cat-cta { font-size: .76rem; font-weight: 700; color: currentColor; display: flex; align-items: center; gap: 4px; }
+    .cat-arr { transition: transform .2s; }
+    .cat-card:hover .cat-arr { transform: translateX(5px); }
+ 
+    /* ══ SECCIÓN CÓMO FUNCIONA ══════════════════════════════════ */
+    .section-how {
+      padding: 80px 64px;
+      background: var(--bg);
+    }
+    @media(max-width:768px){ .section-how { padding: 60px 20px; } }
+ 
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0;
+      margin-top: 48px;
+      position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 32px; left: 32px; right: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border2) 20%, var(--border2) 80%, transparent);
+    }
+    @media(max-width:768px){ .steps::before { display:none; } .steps { gap: 24px; } }
+ 
+    .step {
+      display: flex; flex-direction: column; gap: 14px;
+      padding: 0 28px; text-align: center; align-items: center;
+      position: relative;
+    }
+    .step-circle {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      position: relative; z-index: 1;
+      transition: all .2s;
+    }
+    .step:hover .step-circle {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 6px rgba(14,165,233,.1);
+    }
+    .step-n {
+      position: absolute; top: -6px; right: -6px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--sky2), var(--purple));
+      font-size: .62rem; font-weight: 700; color: white;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-title { font-family: 'Unbounded', sans-serif; font-size: .82rem; font-weight: 700; }
+    .step-desc  { font-size: .78rem; color: var(--muted2); line-height: 1.6; }
+ 
+    /* ══ SECCIÓN FEED EN VIVO ═══════════════════════════════════ */
+    .section-live {
+      padding: 80px 64px;
+      background: var(--bg2);
+    }
+    @media(max-width:768px){ .section-live { padding: 60px 20px; } }
+ 
+    .live-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 40px;
+    }
+    @media(max-width:900px){ .live-grid { grid-template-columns: 1fr; } }
+ 
+    /* Panel de reportes recientes */
+    .live-panel {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .lp-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .lp-head-title { font-size: .8rem; font-weight: 700; flex: 1; }
+    .lp-count { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--muted); }
+ 
+    .lp-list {
+      display: flex; flex-direction: column;
+    }
+ 
+    .lp-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      transition: background .15s; cursor: default;
+    }
+    .lp-item:last-child { border-bottom: none; }
+    .lp-item:hover { background: rgba(255,255,255,.03); }
+ 
+    .lp-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .lp-body { flex: 1; min-width: 0; }
+    .lp-tipo { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .lp-desc { font-size: .76rem; color: var(--muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lp-right { text-align: right; flex-shrink: 0; }
+    .lp-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: .6rem; font-weight: 700; text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .lp-time { font-size: .65rem; color: var(--muted); display: block; }
+ 
+    /* Panel solucionados */
+    .solved-panel {
+      background: var(--bg3);
+      border: 1px solid rgba(52,211,153,.2);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .solved-panel::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--green2), var(--sky2));
+    }
+ 
+    .sp-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(52,211,153,.1);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sp-head-title { font-size: .8rem; font-weight: 700; flex: 1; }
+    .sp-resueltos {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.6rem; font-weight: 700; color: var(--green);
+    }
+    .sp-pct { font-size: .7rem; color: var(--muted); }
+ 
+    /* Barra de progreso tipos */
+    .sp-tipos { padding: 16px 18px; border-bottom: 1px solid rgba(52,211,153,.08); }
+    .sp-tipo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+    .sp-tipo-row:last-child { margin-bottom: 0; }
+    .sp-tipo-lbl { font-size: .72rem; font-weight: 600; width: 72px; flex-shrink: 0; }
+    .sp-track { flex: 1; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
+    .sp-fill  { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
+    .sp-num   { font-size: .68rem; font-family: 'DM Mono', monospace; color: var(--muted); width: 28px; text-align: right; }
+ 
+    /* Lista solucionados recientes */
+    .sp-list { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .sp-item {
+      display: flex; gap: 10px; align-items: center;
+      padding: 10px 12px; border-radius: 10px;
+      background: rgba(52,211,153,.05);
+      border: 1px solid rgba(52,211,153,.1);
+    }
+    .sp-check {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(52,211,153,.15);
+      border: 1px solid rgba(52,211,153,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; flex-shrink: 0;
+    }
+    .sp-body { flex: 1; min-width: 0; }
+    .sp-name { font-size: .78rem; font-weight: 600; }
+    .sp-meta { font-size: .68rem; color: var(--muted); }
+    .sp-dias {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem; font-weight: 700;
+      color: var(--green); flex-shrink: 0;
+    }
+ 
+    /* ══ CTA FINAL ══════════════════════════════════════════════ */
+    .section-cta {
+      padding: 100px 40px;
+      text-align: center;
+      position: relative; overflow: hidden;
+      background: var(--bg);
+    }
+    .cta-glow {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(14,165,233,.12), transparent);
+      pointer-events: none;
+    }
+    .cta-h {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      font-weight: 900; letter-spacing: -.04em;
+      margin-bottom: 16px; position: relative;
+    }
+    .cta-p { font-size: 1rem; color: var(--muted2); margin-bottom: 36px; position: relative; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+ 
+    /* ══ FOOTER ════════════════════════════════════════════════ */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 28px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-l { font-family: 'Unbounded', sans-serif; font-size: .72rem; font-weight: 600; color: var(--muted); }
+    .footer-links { display: flex; gap: 16px; }
+    .footer-links a { font-size: .78rem; color: var(--muted); text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: var(--text); }
+ 
+    /* ══ LEAFLET OVERRIDES ══════════════════════════════════════ */
+    .leaflet-control-zoom { display: none !important; }
+    .leaflet-control-attribution { font-size: .55rem !important; background: rgba(0,0,0,.5) !important; color: rgba(255,255,255,.4) !important; }
+    .leaflet-control-attribution a { color: rgba(255,255,255,.5) !important; }
+    .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large { background:none!important; }
+    .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div { background:none!important; }
+ 
+    /* Responsive final */
+    @media(max-width:600px){
+      .hero-nums { gap: 16px; }
+      .hnum .n   { font-size: 1.5rem; }
+      .cat-grid  { grid-template-columns: repeat(2, 1fr); }
+      .steps     { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      footer     { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+ 
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-icon">🏛️</div>
+    <span class="nav-name">Alerta Ciudadana</span>
+  </div>
+  <div class="nav-live">
+    <span class="dot"></span>
+    <span>En vivo</span>
+  </div>
+  <div class="nav-r">
+    <a href="/admin.html" class="nbtn">⚙ Admin</a>
+    <a href="/index.html" class="nbtn cta">Abrir mapa →</a>
+  </div>
+</nav>
+ 
+<!-- ══ HERO ══════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+ 
+  <!-- Izquierda -->
+  <div class="hero-left">
+    <div class="hero-pill">
+      <span>🏙️</span> Plataforma ciudadana activa
+    </div>
+    <h1 class="hero-h1">
+      Tu ciudad<br>
+      <span class="line-sky">más segura</span><br>
+      <span class="line-grd">contigo.</span>
+    </h1>
+    <p class="hero-p">
+      Reporta baches, fugas, basura y más desde el mapa.
+      El ayuntamiento lo atiende y tú puedes dar seguimiento
+      en tiempo real.
+    </p>
+    <div class="hero-btns">
+      <a href="/index.html" class="hbtn primary">🗺️ Ir al mapa</a>
+      <a href="#categorias" class="hbtn ghost">Ver categorías ↓</a>
+    </div>
+    <div class="hero-nums">
+      <div class="hnum">
+        <div class="n" id="h-total">—</div>
+        <div class="l">Reportes</div>
+      </div>
+      <div class="hnum-div"></div>
+      <div class="hnum">
+        <div class="n" id="h-res" style="color:var(--green)">—</div>
+        <div class="l">Resueltos</div>
+      </div>
+      <div class="hnum-div"></div>
+      <div class="hnum">
+        <div class="n" id="h-hoy" style="color:var(--sky)">—</div>
+        <div class="l">Hoy</div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Derecha — FLYER con mapa + feed en vivo -->
+  <div class="hero-flyer">
+    <div class="flyer-card">
+      <!-- Header estilo browser -->
+      <div class="flyer-header">
+        <div class="flyer-dots">
+          <span style="background:#f87171"></span>
+          <span style="background:#fbbf24"></span>
+          <span style="background:#34d399"></span>
+        </div>
+        <span class="flyer-title-bar">alertaciudadana.gob.mx — Mapa en vivo</span>
+        <div class="flyer-live-badge">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite"></span>
+          LIVE
+        </div>
+      </div>
+ 
+      <!-- Mini mapa -->
+      <div class="flyer-map-wrap">
+        <div id="flyer-map"></div>
+        <div class="flyer-map-overlay"></div>
+      </div>
+ 
+      <!-- Stats rápidas -->
+      <div class="flyer-stats">
+        <div class="fstat">
+          <div class="n" id="f-total" style="color:var(--sky)">—</div>
+          <div class="l">Total</div>
+        </div>
+        <div class="fstat">
+          <div class="n" id="f-proceso" style="color:var(--amber)">—</div>
+          <div class="l">En proceso</div>
+        </div>
+        <div class="fstat">
+          <div class="n" id="f-solucionados" style="color:var(--green)">—</div>
+          <div class="l">Resueltos</div>
+        </div>
+      </div>
+ 
+      <!-- Feed en vivo del flyer -->
+      <div class="flyer-feed" id="flyer-feed">
+        <div style="color:var(--muted);font-size:.75rem;text-align:center;padding:14px">Cargando reportes...</div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- ══ CATEGORÍAS ════════════════════════════════════════════════ -->
+<section class="section-cats" id="categorias">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">¿Qué puedes reportar?</div>
+      <h2 class="sec-title">Tipos de incidencia</h2>
+    </div>
+    <a href="/index.html" class="sec-link">Ver todos en el mapa →</a>
+  </div>
+ 
+  <div class="cat-grid">
+    <a href="/index.html?tipo=bache" class="cat-card" data-c="bache">
+      <div class="cat-img"><span class="cat-ico">🕳️</span></div>
+      <div class="cat-body">
+        <div class="cat-name">Baches</div>
+        <div class="cat-desc">Hoyos y daños en pavimento que afectan la circulación.</div>
+        <div class="cat-chips"><span class="cat-chip">Grieta</span><span class="cat-chip">Hoyo</span><span class="cat-chip">Hundimiento</span></div>
+        <div class="cat-cta">Reportar <span class="cat-arr">→</span></div>
+      </div>
+    </a>
+    <a href="/index.html?tipo=agua" class="cat-card" data-c="agua">
+      <div class="cat-img"><span class="cat-ico">💧</span></div>
+      <div class="cat-body">
+        <div class="cat-name">Agua</div>
+        <div class="cat-desc">Fugas, falta de suministro o agua contaminada.</div>
+        <div class="cat-chips"><span class="cat-chip">Fuga</span><span class="cat-chip">Sin suministro</span><span class="cat-chip">Contaminada</span></div>
+        <div class="cat-cta">Reportar <span class="cat-arr">→</span></div>
+      </div>
+    </a>
+    <a href="/index.html?tipo=basura" class="cat-card" data-c="basura">
+      <div class="cat-img"><span class="cat-ico">🗑️</span></div>
+      <div class="cat-body">
+        <div class="cat-name">Basura</div>
+        <div class="cat-desc">Acumulación en vía pública o contenedores desbordados.</div>
+        <div class="cat-chips"><span class="cat-chip">Vía pública</span><span class="cat-chip">Contenedor</span><span class="cat-chip">Escombros</span></div>
+        <div class="cat-cta">Reportar <span class="cat-arr">→</span></div>
+      </div>
+    </a>
+    <a href="/index.html?tipo=drenaje" class="cat-card" data-c="drenaje">
+      <div class="cat-img"><span class="cat-ico">🌊</span></div>
+      <div class="cat-body">
+        <div class="cat-name">Drenaje</div>
+        <div class="cat-desc">Tapones, desbordamientos o fugas de aguas negras.</div>
+        <div class="cat-chips"><span class="cat-chip">Tapón</span><span class="cat-chip">Desbordamiento</span><span class="cat-chip">Olor</span></div>
+        <div class="cat-cta">Reportar <span class="cat-arr">→</span></div>
+      </div>
+    </a>
+    <a href="/index.html?tipo=luminaria" class="cat-card" data-c="luminaria">
+      <div class="cat-img"><span class="cat-ico">💡</span></div>
+      <div class="cat-body">
+        <div class="cat-name">Luminarias</div>
+        <div class="cat-desc">Focos fundidos, postes caídos o cables expuestos.</div>
+        <div class="cat-chips"><span class="cat-chip">Foco apagado</span><span class="cat-chip">Poste caído</span><span class="cat-chip">Cable</span></div>
+        <div class="cat-cta">Reportar <span class="cat-arr">→</span></div>
+      </div>
+    </a>
+    <a href="/index.html?tipo=otro" class="cat-card" data-c="otro">
+      <div class="cat-img"><span class="cat-ico">⚠️</span></div>
+      <div class="cat-body">
+        <div class="cat-name">Otros</div>
+        <div class="cat-desc">Banquetas, señalética, árboles peligrosos y más.</div>
+        <div class="cat-chips"><span class="cat-chip">Banqueta</span><span class="cat-chip">Señalética</span><span class="cat-chip">Árbol</span></div>
+        <div class="cat-cta">Reportar <span class="cat-arr">→</span></div>
+      </div>
+    </a>
+  </div>
+</section>
+ 
+<!-- ══ CÓMO FUNCIONA ═════════════════════════════════════════════ -->
+<section class="section-how" id="como">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">Proceso</div>
+      <h2 class="sec-title">4 pasos simples</h2>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-circle"><span>📍</span><span class="step-n">1</span></div>
+      <div class="step-title">Localiza</div>
+      <div class="step-desc">Usa tu GPS o mueve el mapa para señalar el punto exacto del problema.</div>
+    </div>
+    <div class="step">
+      <div class="step-circle"><span>📝</span><span class="step-n">2</span></div>
+      <div class="step-title">Describe</div>
+      <div class="step-desc">Selecciona la categoría, escribe una descripción y añade una foto.</div>
+    </div>
+    <div class="step">
+      <div class="step-circle"><span>📤</span><span class="step-n">3</span></div>
+      <div class="step-title">Envía</div>
+      <div class="step-desc">Tu reporte queda registrado con folio único y aparece en el mapa.</div>
+    </div>
+    <div class="step">
+      <div class="step-circle"><span>✅</span><span class="step-n">4</span></div>
+      <div class="step-title">Seguimiento</div>
+      <div class="step-desc">El municipio actualiza el estado. Puedes ver la evidencia de solución.</div>
+    </div>
+  </div>
+</section>
+ 
+<!-- ══ FEED EN VIVO ══════════════════════════════════════════════ -->
+<section class="section-live" id="vivo">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag" style="display:flex;align-items:center;gap:6px">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.4s infinite"></span>
+        Tiempo real
+      </div>
+      <h2 class="sec-title">Actividad ciudadana</h2>
+    </div>
+    <a href="/index.html" class="sec-link">Ver en mapa →</a>
+  </div>
+ 
+  <div class="live-grid">
+ 
+    <!-- Panel: últimos reportes -->
+    <div class="live-panel">
+      <div class="lp-head">
+        <span style="font-size:1rem">📋</span>
+        <span class="lp-head-title">Últimos reportes</span>
+        <span class="lp-count" id="lp-count">—</span>
+      </div>
+      <div class="lp-list" id="lp-list">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-size:.8rem">Cargando...</div>
+      </div>
+    </div>
+ 
+    <!-- Panel: resueltos -->
+    <div class="solved-panel">
+      <div class="sp-head">
+        <span style="font-size:1rem">✅</span>
+        <div style="flex:1">
+          <div class="sp-head-title">Reportes solucionados</div>
+          <div class="sp-pct" id="sp-pct">Calculando eficiencia...</div>
+        </div>
+        <div>
+          <div class="sp-resueltos" id="sp-n">—</div>
+          <div style="font-size:.62rem;color:var(--muted);text-align:right">resueltos</div>
+        </div>
+      </div>
+ 
+      <!-- Barras por tipo solucionado -->
+      <div class="sp-tipos" id="sp-tipos"></div>
+ 
+      <!-- Lista de resueltos recientes -->
+      <div class="sp-list" id="sp-list">
+        <div style="padding:16px;text-align:center;color:var(--muted);font-size:.78rem">Cargando...</div>
+      </div>
+    </div>
+ 
+  </div>
+</section>
+ 
+<!-- ══ CTA ═══════════════════════════════════════════════════════ -->
+<section class="section-cta">
+  <div class="cta-glow"></div>
+  <h2 class="cta-h">¿Ves un problema<br>en tu calle?</h2>
+  <p class="cta-p">Reportarlo toma menos de un minuto. Tu reporte puede mejorar la vida de muchos vecinos.</p>
+  <div class="cta-btns">
+    <a href="/index.html" class="hbtn primary">🗺️ Reportar ahora</a>
+    <a href="#vivo" class="hbtn ghost">Ver actividad ↓</a>
+  </div>
+</section>
+ 
+<!-- FOOTER -->
+<footer>
+  <div class="footer-l">🏛️ Alerta Ciudadana · Smart City Platform</div>
+  <div class="footer-links">
+    <a href="/index.html">Mapa</a>
+    <a href="/admin.html">Admin</a>
+    <a href="#categorias">Categorías</a>
+    <a href="#vivo">Feed vivo</a>
+  </div>
+</footer>
+ 
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+ 
+<script>
+'use strict';
+const API = '/api/reportes';
+const TIPOS = {
+  bache:    { emoji:'🕳️', color:'#f87171', label:'Bache'     },
+  basura:   { emoji:'🗑️', color:'#a78bfa', label:'Basura'    },
+  drenaje:  { emoji:'🌊', color:'#38bdf8', label:'Drenaje'   },
+  agua:     { emoji:'💧', color:'#34d399', label:'Agua'      },
+  luminaria:{ emoji:'💡', color:'#fbbf24', label:'Luminaria' },
+  otro:     { emoji:'⚠️', color:'#94a3b8', label:'Otro'      },
+};
+const ESTADO_PIN = {
+  reportado:'#f87171', revision:'#fbbf24', proceso:'#fb923c',
+  solucionado:'#34d399', cancelado:'#6b7280'
+};
+const ESTADO_LABEL = {
+  reportado:'Reportado', revision:'En revisión', proceso:'En proceso',
+  solucionado:'Solucionado', cancelado:'Cancelado'
+};
+ 
+let fMap, fClusters;
+ 
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initFlyerMap();
+  cargar();
+  setInterval(cargar, 25000);
+});
+ 
+// ── Mini mapa del flyer ───────────────────────────────────────
+function initFlyerMap() {
+  fMap = L.map('flyer-map', {
+    center: [20.5888, -100.3899], zoom: 12,
+    zoomControl: false, attributionControl: true,
+    dragging: false, scrollWheelZoom: false,
+    doubleClickZoom: false, touchZoom: false,
+  });
+ 
+  L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    { attribution:'© CARTO', subdomains:'abcd', maxZoom:19 }
+  ).addTo(fMap);
+ 
+  fClusters = L.markerClusterGroup({
+    maxClusterRadius: 38, showCoverageOnHover: false,
+    iconCreateFunction: cl => {
+      const n = cl.getChildCount();
+      return L.divIcon({
+        html: `<div style="width:26px;height:26px;background:rgba(56,189,248,.85);border:2px solid rgba(255,255,255,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:9px;font-weight:700">${n}</div>`,
+        className:'', iconSize:[26,26], iconAnchor:[13,13],
+      });
+    }
+  });
+  fMap.addLayer(fClusters);
+ 
+  // Auto-ubicar
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      p => fMap.setView([p.coords.latitude, p.coords.longitude], 13),
+      () => {}
+    );
+  }
+}
+ 
+// ── Cargar todos los datos ────────────────────────────────────
+async function cargar() {
+  try {
+    const [mapData, stats] = await Promise.all([
+      fetch(`${API}/mapa`).then(r => r.json()),
+      fetch(`${API}/estadisticas`).then(r => r.json()),
+    ]);
+    renderStats(stats, mapData);
+    renderFlyerMapa(mapData);
+    renderFlyerFeed(mapData);
+    renderPanelReportes(mapData);
+    renderPanelSolucionados(stats, mapData);
+  } catch(e) { console.error(e); }
+}
+ 
+// ── Estadísticas ──────────────────────────────────────────────
+function renderStats(stats, mapData) {
+  const r = stats.resumen || {};
+  set('h-total',       r.total || 0);
+  set('h-res',         r.solucionados || 0);
+  set('f-total',       r.total || 0);
+  set('f-proceso',     (r.en_revision||0) + (r.en_proceso||0));
+  set('f-solucionados', r.solucionados || 0);
+ 
+  // Hoy
+  const hoy = new Date().toDateString();
+  const hoyN = mapData.filter(r => new Date(r.creado_en).toDateString() === hoy).length;
+  set('h-hoy', hoyN);
+}
+ 
+// ── Mapa del flyer ────────────────────────────────────────────
+function renderFlyerMapa(rs) {
+  fClusters.clearLayers();
+  rs.forEach(r => {
+    const col = ESTADO_PIN[r.estado] || '#f87171';
+    const t   = TIPOS[r.tipo] || TIPOS.otro;
+    const icon = L.divIcon({
+      html: `<div style="width:22px;height:22px;background:${col};border-radius:50% 50% 50% 2px;transform:rotate(-45deg);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:9px">${r.estado==='solucionado'?'✓':t.emoji}</span></div>`,
+      className:'', iconSize:[22,22], iconAnchor:[11,22], popupAnchor:[0,-22],
+    });
+    const m = L.marker([r.latitud, r.longitud], { icon });
+    m.bindPopup(`<div style="padding:6px 8px;font-size:.75rem;font-family:sans-serif"><b style="color:${col}">${t.emoji} ${t.label}</b><br><span style="color:#888">${r.folio||'#'+r.id}</span></div>`, { maxWidth:160 });
+    fClusters.addLayer(m);
+  });
+ 
+  if (rs.length > 0) {
+    try {
+      fMap.fitBounds(L.latLngBounds(rs.map(r=>[r.latitud,r.longitud])), { padding:[20,20], maxZoom:14 });
+    } catch {}
+  }
+}
+ 
+// ── Feed del flyer (últimos 4) ────────────────────────────────
+function renderFlyerFeed(rs) {
+  const sorted = [...rs].sort((a,b) => new Date(b.creado_en)-new Date(a.creado_en)).slice(0,4);
+  if (!sorted.length) {
+    document.getElementById('flyer-feed').innerHTML =
+      '<div style="color:var(--muted);font-size:.73rem;text-align:center;padding:14px">Sin reportes aún</div>';
+    return;
+  }
+  document.getElementById('flyer-feed').innerHTML = sorted.map(r => {
+    const t   = TIPOS[r.tipo] || TIPOS.otro;
+    const col = ESTADO_PIN[r.estado] || '#f87171';
+    return `<div class="ff-item">
+      <div class="ff-ico" style="background:${col}18">${t.emoji}</div>
+      <div class="ff-body">
+        <div class="ff-top">
+          <span class="ff-tipo" style="color:${t.color}">${t.label}</span>
+          <span class="ff-badge" style="background:${col}20;color:${col}">${ESTADO_LABEL[r.estado]||r.estado}</span>
+        </div>
+        <div class="ff-desc">${r.descripcion||r.subtipo||'Sin descripción'}</div>
+      </div>
+      <span class="ff-time">${timeAgo(r.creado_en)}</span>
+    </div>`;
+  }).join('');
+}
+ 
+// ── Panel últimos reportes ────────────────────────────────────
+function renderPanelReportes(rs) {
+  const sorted = [...rs].sort((a,b) => new Date(b.creado_en)-new Date(a.creado_en)).slice(0,8);
+  set('lp-count', rs.length + ' reportes');
+  if (!sorted.length) {
+    document.getElementById('lp-list').innerHTML =
+      '<div style="padding:24px;text-align:center;color:var(--muted);font-size:.78rem">Sin reportes aún</div>';
+    return;
+  }
+  document.getElementById('lp-list').innerHTML = sorted.map(r => {
+    const t   = TIPOS[r.tipo] || TIPOS.otro;
+    const col = ESTADO_PIN[r.estado] || '#f87171';
+    return `<div class="lp-item">
+      <div class="lp-dot" style="background:${col}"></div>
+      <div class="lp-body">
+        <div class="lp-tipo" style="color:${t.color}">${t.emoji} ${t.label}</div>
+        <div class="lp-desc">${r.descripcion||r.subtipo||r.colonia||'Sin descripción'}</div>
+      </div>
+      <div class="lp-right">
+        <span class="lp-badge" style="background:${col}20;color:${col}">${ESTADO_LABEL[r.estado]||r.estado}</span>
+        <span class="lp-time">${timeAgo(r.creado_en)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+ 
+// ── Panel solucionados ────────────────────────────────────────
+function renderPanelSolucionados(stats, rs) {
+  const r    = stats.resumen || {};
+  const total= r.total || 0;
+  const resN = r.solucionados || 0;
+  const pct  = total > 0 ? Math.round(resN/total*100) : 0;
+ 
+  set('sp-n',   resN);
+  set('sp-pct', `${pct}% de eficiencia (${resN} de ${total})`);
+ 
+  // Barras por tipo solucionado
+  const porTipo = stats.porTipo || [];
+  const maxRes  = Math.max(...porTipo.map(t => t.solucionados||0), 1);
+  document.getElementById('sp-tipos').innerHTML = porTipo.filter(t => t.total > 0).map(t => {
+    const inf = TIPOS[t.tipo] || TIPOS.otro;
+    const pctT= Math.round((t.solucionados||0) / maxRes * 100);
+    return `<div class="sp-tipo-row">
+      <span class="sp-tipo-lbl" style="color:${inf.color}">${inf.emoji} ${inf.label}</span>
+      <div class="sp-track"><div class="sp-fill" style="width:${pctT}%;background:${inf.color}"></div></div>
+      <span class="sp-num">${t.solucionados||0}</span>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:.75rem">Sin datos aún</div>';
+ 
+  // Lista de solucionados recientes
+  const solucionados = [...rs]
+    .filter(r => r.estado === 'solucionado')
+    .sort((a,b) => new Date(b.creado_en)-new Date(a.creado_en))
+    .slice(0, 5);
+ 
+  if (!solucionados.length) {
+    document.getElementById('sp-list').innerHTML =
+      '<div style="padding:16px;text-align:center;color:var(--muted);font-size:.78rem">Sin reportes solucionados aún</div>';
+    return;
+  }
+  document.getElementById('sp-list').innerHTML = solucionados.map(r => {
+    const t = TIPOS[r.tipo] || TIPOS.otro;
+    const dias = r.resuelto_en
+      ? Math.round((new Date(r.resuelto_en)-new Date(r.creado_en))/86400000*10)/10
+      : null;
+    return `<div class="sp-item">
+      <div class="sp-check">✅</div>
+      <div class="sp-body">
+        <div class="sp-name">${t.emoji} ${t.label} — ${r.folio||'#'+r.id}</div>
+        <div class="sp-meta">${r.colonia||r.descripcion||'Sin ubicación'} · ${timeAgo(r.creado_en)}</div>
+      </div>
+      ${dias !== null ? `<div class="sp-dias">${dias}d</div>` : ''}
+    </div>`;
+  }).join('');
+}
+ 
+// ── Helpers ───────────────────────────────────────────────────
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+ 
+function timeAgo(d) {
+  if (!d) return '';
+  const s = (Date.now()-new Date(d).getTime())/1000;
+  if (s < 60)      return 'ahora';
+  if (s < 3600)    return `${Math.floor(s/60)}min`;
+  if (s < 86400)   return `${Math.floor(s/3600)}h`;
+  if (s < 2592000) return `${Math.floor(s/86400)}d`;
+  return new Date(d).toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+}
+</script>
+</body>
+</html>
