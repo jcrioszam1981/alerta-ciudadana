@@ -661,3 +661,243 @@ document.head.insertAdjacentHTML('beforeend', `<style>
   @keyframes ping { 0%{transform:scale(1);opacity:.7} 70%{transform:scale(2.2);opacity:0} 100%{transform:scale(2.2);opacity:0} }
   @keyframes sh   { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
 </style>`);
+
+// ══ CERCA DE MÍ ══════════════════════════════════════════════
+// Radio en km
+const RADIO_KM = 1;
+let cercaReporteId = null;
+let cercaOptSel    = null;
+let evidFotoOrigen = null;
+let radioLayer     = null;
+
+// Calcular distancia en km entre dos coordenadas (Haversine)
+function distKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+            Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Formatear distancia para mostrar
+function fmtDist(km) {
+  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+}
+
+// ── Abrir drawer "Cerca de mí" ────────────────────────────────
+async function abrirCerca() {
+  document.getElementById('ov-cerca').classList.add('open');
+  document.getElementById('drawer-cerca').classList.add('open');
+  document.getElementById('cerca-sub').textContent = 'Buscando en 1 km a la redonda...';
+  document.getElementById('cerca-lista').innerHTML =
+    '<div style="padding:30px;text-align:center;color:var(--muted);font-size:.85rem">Obteniendo tu ubicación...</div>';
+
+  // Obtener GPS
+  let pos = gpsPos;
+  if (!pos) {
+    try {
+      pos = await new Promise((res, rej) => {
+        navigator.geolocation.getCurrentPosition(
+          p => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+          rej,
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+      gpsPos = pos;
+      dibujarMiPos(pos.lat, pos.lng);
+    } catch {
+      document.getElementById('cerca-lista').innerHTML =
+        '<div style="padding:30px;text-align:center;color:var(--red);font-size:.85rem">⚠️ No se pudo obtener tu ubicación.<br>Activa el GPS e intenta de nuevo.</div>';
+      return;
+    }
+  }
+
+  // Centrar mapa en usuario
+  map.flyTo([pos.lat, pos.lng], 15, { animate: true, duration: 1 });
+
+  // Dibujar círculo de radio en el mapa
+  if (radioLayer) map.removeLayer(radioLayer);
+  radioLayer = L.circle([pos.lat, pos.lng], {
+    radius: RADIO_KM * 1000,
+    color: '#2563eb', weight: 1.5,
+    fillColor: '#2563eb', fillOpacity: 0.05,
+    dashArray: '6 4', className: 'radio-circle'
+  }).addTo(map);
+
+  // Filtrar reportes dentro del radio
+  const cercanos = todosR
+    .map(r => ({ ...r, dist: distKm(pos.lat, pos.lng, r.latitud, r.longitud) }))
+    .filter(r => r.dist <= RADIO_KM)
+    .sort((a, b) => a.dist - b.dist);
+
+  document.getElementById('cerca-sub').textContent =
+    `${cercanos.length} reporte${cercanos.length !== 1 ? 's' : ''} en ${RADIO_KM} km`;
+
+  if (!cercanos.length) {
+    document.getElementById('cerca-lista').innerHTML = `
+      <div style="padding:40px 20px;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:10px">🎉</div>
+        <div style="font-weight:700;margin-bottom:6px">¡Sin reportes cercanos!</div>
+        <div style="font-size:.83rem;color:var(--muted)">No hay incidencias reportadas en 1 km a la redonda.</div>
+      </div>`;
+    return;
+  }
+
+  const TL_COL = { reportado:'#ef4444', revision:'#f59e0b', proceso:'#f97316', solucionado:'#10b981', cancelado:'#6b7280' };
+  const TL_LBL = { reportado:'Reportado', revision:'En revisión', proceso:'En proceso', solucionado:'Solucionado', cancelado:'Cancelado' };
+
+  document.getElementById('cerca-lista').innerHTML = cercanos.map(r => {
+    const t   = TIPOS[r.tipo] || TIPOS.otro;
+    const col = TL_COL[r.estado] || '#6b7280';
+    const lbl = TL_LBL[r.estado] || r.estado;
+    return `
+      <div class="cerca-item" onclick="abrirEvidDesde(${r.id},'${r.folio||''}','${r.tipo}','${r.estado}')">
+        <div class="ci-pin" style="background:${col}18">
+          <span style="font-size:1.1rem">${t.emoji}</span>
+        </div>
+        <div class="ci-body">
+          <div class="ci-top">
+            <span class="ci-tipo" style="color:${t.color}">${t.label}</span>
+            <span class="ci-estado" style="background:${col}20;color:${col}">${lbl}</span>
+          </div>
+          <div class="ci-desc">${r.descripcion || r.subtipo || 'Sin descripción'}</div>
+          <div class="ci-dist">📍 ${fmtDist(r.dist)} de distancia · ${timeAgo(r.creado_en)}</div>
+        </div>
+        <div class="ci-right">
+          <div class="ci-arrow">›</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function cerrarCerca() {
+  document.getElementById('ov-cerca').classList.remove('open');
+  document.getElementById('drawer-cerca').classList.remove('open');
+  // Quitar círculo del mapa
+  if (radioLayer) { map.removeLayer(radioLayer); radioLayer = null; }
+}
+
+// ── Abrir sheet de evidencia desde cerca ─────────────────────
+async function abrirEvidDesde(id, folio, tipo, estado) {
+  cercaReporteId = id;
+  cercaOptSel    = null;
+  evidFotoOrigen = null;
+
+  const t = TIPOS[tipo] || TIPOS.otro;
+  document.getElementById('evid-title').textContent = `${t.emoji} Actualizar reporte`;
+  document.getElementById('evid-sub').textContent   = folio || '#' + id;
+
+  // Limpiar estado anterior
+  document.querySelectorAll('.evid-opt').forEach(o => o.classList.remove('sel'));
+  document.getElementById('evid-nota').value = '';
+  evidLimpiar();
+
+  // Pre-seleccionar opción según estado actual
+  if (estado === 'solucionado') {
+    const opt = document.querySelector('.evid-opt.resuelto');
+    if (opt) selOpt(opt, 'resuelto');
+  }
+
+  document.getElementById('evid-overlay').classList.add('open');
+  document.getElementById('evid-sheet').classList.add('open');
+}
+
+function cerrarEvid() {
+  document.getElementById('evid-overlay').classList.remove('open');
+  document.getElementById('evid-sheet').classList.remove('open');
+}
+
+// ── Selección de opción de estado ────────────────────────────
+function selOpt(el, tipo) {
+  document.querySelectorAll('.evid-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  cercaOptSel = tipo;
+}
+
+// ── Foto en evidencia ciudadana ───────────────────────────────
+function evidPrev(input) {
+  const f = input.files[0];
+  if (!f) return;
+  evidFotoOrigen = input.id;
+  const rd = new FileReader();
+  rd.onload = e => {
+    const img   = document.getElementById('evid-preview');
+    const clear = document.getElementById('evid-clear');
+    img.src             = e.target.result;
+    img.style.display   = 'block';
+    clear.style.display = 'block';
+    // Ocultar botones
+    document.querySelectorAll('.efbtn').forEach(b => b.style.opacity = '.4');
+  };
+  rd.readAsDataURL(f);
+}
+
+function evidLimpiar() {
+  const cam = document.getElementById('evid-cam');
+  const gal = document.getElementById('evid-gal');
+  if (cam) cam.value = '';
+  if (gal) gal.value = '';
+  evidFotoOrigen = null;
+  document.getElementById('evid-preview').style.display = 'none';
+  document.getElementById('evid-clear').style.display   = 'none';
+  document.querySelectorAll('.efbtn').forEach(b => b.style.opacity = '1');
+}
+
+// ── Enviar evidencia ciudadana (sin autenticación) ────────────
+async function enviarEvidencia() {
+  if (!cercaReporteId) { toast('Error: reporte no identificado', 'err'); return; }
+  if (!cercaOptSel)    { toast('Selecciona cómo está el problema', 'err'); return; }
+
+  // Mapear opción a comentario y estado para el historial
+  const mapOpt = {
+    resuelto:  { comentario: '✅ Ciudadano reporta que el problema fue resuelto.',     estado: 'solucionado' },
+    proceso:   { comentario: '🔧 Ciudadano reporta que el problema está en atención.', estado: 'proceso'     },
+    pendiente: { comentario: '⏳ Ciudadano reporta que el problema sigue sin atención.', estado: 'reportado'  },
+    peor:      { comentario: '⚠️ Ciudadano reporta que el problema empeoró.',           estado: 'reportado'  },
+  };
+  const opt = mapOpt[cercaOptSel];
+  const nota = document.getElementById('evid-nota').value.trim();
+  const comentarioFinal = nota ? `${opt.comentario} Nota: ${nota}` : opt.comentario;
+
+  const btn = document.getElementById('btn-evid-send');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Enviando...';
+
+  try {
+    const fd = new FormData();
+    fd.append('estado_nuevo', opt.estado);
+    fd.append('comentario',   comentarioFinal);
+    fd.append('es_publico',   1);
+
+    // Foto si existe
+    const fotoCam = document.getElementById('evid-cam');
+    const fotoGal = document.getElementById('evid-gal');
+    const foto    = (fotoCam && fotoCam.files[0]) || (fotoGal && fotoGal.files[0]) || null;
+    if (foto) fd.append('evidencias', foto);
+
+    // Usar el endpoint de seguimiento con token vacío (el servidor acepta sin auth para ciudadanos)
+    // Primero intentamos sin token, si falla usamos el endpoint público
+    const res = await fetch(`${API_SEG}/${cercaReporteId}/ciudadano`, {
+      method: 'POST',
+      body: fd
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al enviar');
+
+    toast('✅ ¡Gracias! Tu evidencia fue registrada.', 'ok');
+    cerrarEvid();
+    cerrarCerca();
+
+    // Recargar datos del mapa
+    await cargarTodo();
+
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📤 Enviar evidencia ciudadana';
+  }
+}

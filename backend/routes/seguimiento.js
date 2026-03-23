@@ -144,6 +144,80 @@ router.post('/:id/actualizar',
   }
 );
 
+
+// ============================================================
+// POST /api/seguimiento/:id/ciudadano
+// Evidencia ciudadana SIN autenticación — cualquier persona puede reportar
+// Solo registra comentario público y foto, NO cambia estado oficial
+// ============================================================
+router.post('/:id/ciudadano',
+  upload.array('evidencias', 2),
+  async (req, res) => {
+    try {
+      const reporteId = parseInt(req.params.id);
+      const { comentario, estado_nuevo } = req.body;
+
+      const reporte = await get('SELECT * FROM reportes WHERE id = ?', [reporteId]);
+      if (!reporte) return res.status(404).json({ error: 'Reporte no encontrado' });
+
+      // Solo permitir ciertos estados desde ciudadanos (no cancelado, no revisión)
+      const ESTADOS_CIUDADANO = ['reportado','proceso','solucionado'];
+      const estadoFinal = ESTADOS_CIUDADANO.includes(estado_nuevo) ? estado_nuevo : 'reportado';
+
+      // Registrar como actualización pública marcada como "ciudadano"
+      const comentarioCiudadano = `[Evidencia ciudadana] ${comentario?.trim() || 'Sin comentario'}`;
+
+      const { lastID: actId } = await run(
+        `INSERT INTO actualizaciones
+           (reporte_id, usuario_id, estado_nuevo, comentario, es_publico)
+         VALUES (?, NULL, ?, ?, 1)`,
+        [reporteId, estadoFinal, comentarioCiudadano]
+      );
+
+      // Guardar fotos de evidencia
+      const evidencias = [];
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          const url = `/uploads/evidencias/${file.filename}`;
+          const { lastID: evId } = await run(
+            `INSERT INTO evidencias (actualizacion_id, reporte_id, url) VALUES (?, ?, ?)`,
+            [actId, reporteId, url]
+          );
+          evidencias.push({ id: evId, url });
+        }
+      }
+
+      // Si el ciudadano confirma que está resuelto, actualizar estado
+      // (requiere al menos 2 confirmaciones ciudadanas para cambiar a solucionado)
+      if (estadoFinal === 'solucionado') {
+        const confirmaciones = await get(
+          `SELECT COUNT(*) as n FROM actualizaciones
+           WHERE reporte_id = ? AND estado_nuevo = 'solucionado'
+           AND usuario_id IS NULL`,
+          [reporteId]
+        );
+        if ((confirmaciones?.n || 0) >= 2 && reporte.estado !== 'solucionado') {
+          await run(
+            `UPDATE reportes SET estado = 'solucionado', resuelto_en = datetime('now','localtime')
+             WHERE id = ?`,
+            [reporteId]
+          );
+        }
+      }
+
+      res.status(201).json({
+        ok: true,
+        mensaje: 'Evidencia ciudadana registrada',
+        evidencias,
+      });
+
+    } catch(err) {
+      console.error('Error evidencia ciudadana:', err);
+      res.status(500).json({ error: 'Error al guardar la evidencia' });
+    }
+  }
+);
+
 // ============================================================
 // GET /api/seguimiento/:id/historial
 // Timeline completo de un reporte con evidencias

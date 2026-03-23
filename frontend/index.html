@@ -357,6 +357,126 @@
     .mni-rep{color:var(--blue);}
     .mni-rep .mni-ico{font-size:1.4rem;background:var(--blue);color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1px;box-shadow:0 4px 12px rgba(37,99,235,.4);}
 
+
+    /* ── CERCA DE MÍ ── */
+    .cerca-btn{
+      position:fixed;bottom:86px;right:12px;z-index:500;
+      display:flex;align-items:center;gap:7px;
+      padding:10px 16px;background:var(--blue);color:#fff;
+      border:none;border-radius:50px;font-family:inherit;
+      font-size:.84rem;font-weight:700;cursor:pointer;
+      box-shadow:0 4px 18px rgba(37,99,235,.45);
+      transition:all .2s;
+    }
+    .cerca-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(37,99,235,.5);}
+    .cerca-btn .cb-pulse{
+      width:8px;height:8px;border-radius:50%;background:#7ee8a2;
+      animation:cpulse 1.5s infinite;
+    }
+    @keyframes cpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+    @media(max-width:480px){.cerca-btn{bottom:78px;right:8px;}}
+
+    /* Lista de reportes cercanos */
+    .cerca-item{
+      display:flex;gap:12px;align-items:flex-start;
+      padding:12px 16px;border-bottom:1px solid var(--border);
+      cursor:pointer;transition:background .15s;
+    }
+    .cerca-item:last-child{border-bottom:none;}
+    .cerca-item:hover{background:var(--off);}
+    .ci-pin{
+      width:36px;height:36px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1rem;flex-shrink:0;
+    }
+    .ci-body{flex:1;min-width:0;}
+    .ci-top{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
+    .ci-tipo{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+    .ci-estado{
+      padding:2px 7px;border-radius:10px;
+      font-size:.62rem;font-weight:700;text-transform:uppercase;
+    }
+    .ci-desc{font-size:.78rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ci-dist{font-size:.7rem;color:var(--muted);margin-top:2px;}
+    .ci-right{flex-shrink:0;text-align:right;}
+    .ci-arrow{font-size:1rem;color:var(--muted);}
+
+    /* Modal evidencia ciudadana */
+    .evid-overlay{
+      position:fixed;inset:0;background:rgba(10,15,30,.45);
+      backdrop-filter:blur(3px);z-index:1100;
+      opacity:0;pointer-events:none;transition:opacity .22s;
+    }
+    .evid-overlay.open{opacity:1;pointer-events:all;}
+    .evid-sheet{
+      position:fixed;bottom:0;left:0;right:0;z-index:1200;
+      background:var(--white);border-radius:20px 20px 0 0;
+      box-shadow:0 -8px 40px rgba(0,0,0,.15);
+      transform:translateY(100%);
+      transition:transform .32s cubic-bezier(.32,.72,0,1);
+      max-height:88vh;overflow-y:auto;
+    }
+    .evid-sheet.open{transform:translateY(0);}
+    @media(min-width:580px){
+      .evid-sheet{left:50%;right:auto;width:460px;transform:translateX(-50%) translateY(100%);}
+      .evid-sheet.open{transform:translateX(-50%) translateY(0);}
+    }
+    .evid-head{padding:14px 18px 12px;border-bottom:1px solid var(--border);}
+    .evid-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .evid-sub{font-size:.76rem;color:var(--muted);}
+    .evid-body{padding:16px 18px 32px;}
+
+    /* Opciones de estado */
+    .evid-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+    .evid-opt{
+      padding:14px 10px;border:2px solid var(--border);border-radius:12px;
+      text-align:center;cursor:pointer;transition:all .18s;background:var(--white);
+    }
+    .evid-opt:hover{border-color:currentColor;background:color-mix(in srgb,currentColor 6%,white);}
+    .evid-opt.sel{border-color:currentColor;background:color-mix(in srgb,currentColor 10%,white);}
+    .evid-opt.resuelto{color:var(--green);}
+    .evid-opt.pendiente{color:var(--amber);}
+    .evid-opt.peor{color:var(--red);}
+    .evid-opt.proceso{color:#f97316;}
+    .eo-ico{font-size:1.6rem;margin-bottom:4px;}
+    .eo-lbl{font-size:.75rem;font-weight:700;}
+
+    /* Upload foto evidencia ciudadana */
+    .evid-foto-wrap{margin-bottom:14px;}
+    .evid-foto-btns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px;}
+    .efbtn{
+      position:relative;overflow:hidden;
+      padding:10px 8px;border:1.5px solid var(--border);
+      border-radius:var(--rsm);background:var(--off);
+      text-align:center;cursor:pointer;transition:all .16s;font-size:.72rem;
+      color:var(--text2);
+    }
+    .efbtn:hover{border-color:var(--blue);background:var(--blue-lt);}
+    .efbtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .efbtn b{display:block;font-size:1.2rem;margin-bottom:2px;}
+    #evid-preview{display:none;width:100%;height:80px;object-fit:cover;border-radius:8px;}
+    #evid-clear{display:none;width:100%;padding:5px;background:none;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:.72rem;color:var(--muted);cursor:pointer;margin-top:4px;}
+
+    .evid-nota{
+      width:100%;padding:9px 11px;border:1.5px solid var(--border);
+      border-radius:var(--rsm);font-family:inherit;font-size:.84rem;
+      color:var(--text);background:var(--white);outline:none;resize:none;height:60px;
+      transition:border-color .15s;
+    }
+    .evid-nota:focus{border-color:var(--blue);}
+    .btn-evid-send{
+      width:100%;padding:13px;background:var(--blue);color:#fff;
+      border:none;border-radius:var(--r);font-family:inherit;
+      font-size:.92rem;font-weight:700;cursor:pointer;margin-top:12px;
+      display:flex;align-items:center;justify-content:center;gap:7px;
+      transition:all .17s;
+    }
+    .btn-evid-send:hover{background:var(--blue-d);}
+    .btn-evid-send:disabled{opacity:.5;cursor:not-allowed;}
+
+    /* Radio visual en mapa */
+    .radio-circle{pointer-events:none;}
+
     @keyframes ping{0%{transform:scale(1);opacity:.7;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.2);opacity:0;}}
   </style>
 </head>
@@ -516,9 +636,94 @@
     <button class="mni a" onclick="this.classList.add('a')"><span class="mni-ico">🗺️</span>Mapa</button>
     <button class="mni" onclick="irGPS()"><span class="mni-ico">📍</span>GPS</button>
     <button class="mni mni-rep" onclick="abrirNuevo()"><div class="mni-ico">＋</div>Reportar</button>
-    <button class="mni" onclick="toggleHeat()"><span class="mni-ico">🔥</span>Calor</button>
+    <button class="mni" onclick="abrirCerca()"><span class="mni-ico">🔍</span>Cerca</button>
     <button class="mni" onclick="window.location='/admin.html'"><span class="mni-ico">⚙️</span>Admin</button>
   </nav>
+</div>
+
+
+<!-- BOTÓN CERCA DE MÍ -->
+<button class="cerca-btn" onclick="abrirCerca()" id="btn-cerca">
+  <span class="cb-pulse"></span>
+  📍 Cerca de mí
+</button>
+
+<!-- OVERLAY + DRAWER CERCA DE MÍ -->
+<div class="ov" id="ov-cerca" onclick="cerrarCerca()"></div>
+<div class="drawer" id="drawer-cerca">
+  <div class="dh"></div>
+  <div class="dhead">
+    <div>
+      <div class="dtitle">📍 Reportes cerca de ti</div>
+      <div class="dsub" id="cerca-sub">Buscando en 1 km a la redonda...</div>
+    </div>
+    <button class="bx" onclick="cerrarCerca()">✕</button>
+  </div>
+  <div id="cerca-lista" style="overflow-y:auto;max-height:65vh">
+    <div style="padding:30px;text-align:center;color:var(--muted);font-size:.85rem">
+      Obteniendo tu ubicación...
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY + SHEET EVIDENCIA CIUDADANA -->
+<div class="evid-overlay" id="evid-overlay" onclick="cerrarEvid()"></div>
+<div class="evid-sheet" id="evid-sheet">
+  <div class="dh" style="margin:10px auto 0"></div>
+  <div class="evid-head">
+    <div class="evid-title" id="evid-title">Actualizar reporte</div>
+    <div class="evid-sub" id="evid-sub">Folio del reporte</div>
+  </div>
+  <div class="evid-body">
+    <div style="font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:9px">
+      ¿Cómo está el problema?
+    </div>
+    <div class="evid-opts">
+      <div class="evid-opt resuelto" onclick="selOpt(this,'resuelto')">
+        <div class="eo-ico">✅</div>
+        <div class="eo-lbl">Ya está resuelto</div>
+      </div>
+      <div class="evid-opt proceso" onclick="selOpt(this,'proceso')">
+        <div class="eo-ico">🔧</div>
+        <div class="eo-lbl">Lo están arreglando</div>
+      </div>
+      <div class="evid-opt pendiente" onclick="selOpt(this,'pendiente')">
+        <div class="eo-ico">⏳</div>
+        <div class="eo-lbl">Sigue sin atención</div>
+      </div>
+      <div class="evid-opt peor" onclick="selOpt(this,'peor')">
+        <div class="eo-ico">⚠️</div>
+        <div class="eo-lbl">Empeoró</div>
+      </div>
+    </div>
+
+    <div style="font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:9px">
+      Foto de evidencia <span style="font-weight:400;text-transform:none;letter-spacing:0">(recomendada)</span>
+    </div>
+    <div class="evid-foto-wrap">
+      <div class="evid-foto-btns">
+        <div class="efbtn">
+          <input type="file" id="evid-cam" accept="image/*" capture="environment" onchange="evidPrev(this)"/>
+          <b>📸</b>Tomar foto
+        </div>
+        <div class="efbtn">
+          <input type="file" id="evid-gal" accept="image/*" onchange="evidPrev(this)"/>
+          <b>🖼️</b>Galería
+        </div>
+      </div>
+      <img id="evid-preview"/>
+      <button type="button" id="evid-clear" onclick="evidLimpiar()">✕ Quitar foto</button>
+    </div>
+
+    <div style="font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px">
+      Comentario <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span>
+    </div>
+    <textarea class="evid-nota" id="evid-nota" placeholder="Describe lo que ves..."></textarea>
+
+    <button class="btn-evid-send" id="btn-evid-send" onclick="enviarEvidencia()">
+      📤 Enviar evidencia ciudadana
+    </button>
+  </div>
 </div>
 
 <div id="toasts"></div>
