@@ -1,9 +1,9 @@
 // app.js — Alerta Ciudadana v2.4 (corregido)
 'use strict';
- 
+
 const API = '/api/reportes';
 const API_SEG = '/api/seguimiento';
- 
+
 const TIPOS = {
   bache:    { emoji:'🕳️', color:'#ef4444', label:'Bache'     },
   basura:   { emoji:'🗑️', color:'#8b5cf6', label:'Basura'    },
@@ -32,7 +32,7 @@ const ESTADO_PIN = {
   reportado:'#ef4444', revision:'#f59e0b',
   proceso:'#f97316',   solucionado:'#10b981', cancelado:'#6b7280'
 };
- 
+
 // ── Estado global ─────────────────────────────────────────────
 let map, clusters, heatLayer, osmTile, satTile;
 let miMarkers = [];
@@ -42,11 +42,11 @@ let filtro    = 'todos';
 let gpsPos    = null;
 let todosR    = [];
 let modoPin   = false;
- 
+
 // ══ INIT ══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
- 
+
   // Leer filtro desde URL (?tipo=bache)
   const urlTipo = new URLSearchParams(location.search).get('tipo');
   if (urlTipo && TIPOS[urlTipo]) {
@@ -57,16 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('on');
     }
   }
- 
+
   cargarTodo();
   autoUbicar();
   setInterval(cargarTodo, 30000);
 });
- 
+
 function cargarTodo() {
   return Promise.all([cargarMapa(), cargarStats()]);
 }
- 
+
 // ══ AUTO-UBICACIÓN ════════════════════════════════════════════
 function autoUbicar() {
   if (!navigator.geolocation) return;
@@ -81,7 +81,7 @@ function autoUbicar() {
     { enableHighAccuracy:true, timeout:12000 }
   );
 }
- 
+
 function dibujarMiPos(lat, lng) {
   miMarkers.forEach(l => map.removeLayer(l));
   miMarkers = [];
@@ -96,28 +96,28 @@ function dibujarMiPos(lat, lng) {
   }).addTo(map);
   miMarkers = [p, a];
 }
- 
+
 // ══ MAPA ══════════════════════════════════════════════════════
 function initMap() {
   map = L.map('map', { center:[20.5888,-100.3899], zoom:13, zoomControl:false });
- 
+
   osmTile = L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
     { attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19 }
   ).addTo(map);
- 
+
   satTile = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { attribution:'© Esri', maxZoom:19 }
   );
- 
+
   clusters = L.markerClusterGroup({
     maxClusterRadius:48, showCoverageOnHover:false, spiderfyOnMaxZoom:true,
     iconCreateFunction: mkCluster,
   });
   map.addLayer(clusters);
   L.control.zoom({ position:'bottomright' }).addTo(map);
- 
+
   map.on('move', () => {
     if (!modoPin) return;
     const c = map.getCenter();
@@ -125,7 +125,7 @@ function initMap() {
     if (el) el.textContent = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
   });
 }
- 
+
 function mkCluster(cl) {
   const n = cl.getChildCount();
   const s = n > 100 ? 46 : n > 20 ? 38 : 30;
@@ -134,7 +134,7 @@ function mkCluster(cl) {
     className:'', iconSize:[s,s], iconAnchor:[s/2,s/2],
   });
 }
- 
+
 // Pin con color según ESTADO
 function mkIcon(tipo, estado, isNew) {
   if (typeof estado === 'boolean') { isNew = estado; estado = 'reportado'; }
@@ -158,7 +158,7 @@ function mkIcon(tipo, estado, isNew) {
     className:'', iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-34],
   });
 }
- 
+
 // ══ DATOS DEL MAPA ════════════════════════════════════════════
 async function cargarMapa() {
   try {
@@ -168,7 +168,7 @@ async function cargarMapa() {
     if (heatOn) renderHeat(todosR);
   } catch(e) { console.error('mapa:', e); }
 }
- 
+
 function renderMarcadores(rs) {
   clusters.clearLayers();
   rs.forEach(r => {
@@ -176,22 +176,22 @@ function renderMarcadores(rs) {
     const est      = ESTADOS[r.estado] || ESTADOS.reportado;
     const pinColor = ESTADO_PIN[r.estado] || '#ef4444';
     const isSolved = r.estado === 'solucionado';
- 
+
     const m = L.marker([r.latitud, r.longitud], { icon: mkIcon(r.tipo, r.estado) });
- 
+
     // Días que tardó en resolverse (si aplica)
     const diasResol = (isSolved && r.resuelto_en && r.creado_en)
       ? Math.round((new Date(r.resuelto_en) - new Date(r.creado_en)) / 86400000 * 10) / 10
       : null;
- 
+
     const fotoHtml = r.foto_url
       ? `<img src="${r.foto_url}" style="width:100%;height:85px;object-fit:cover;border-radius:8px 8px 0 0;display:block" onerror="this.style.display='none'"/>`
       : '';
- 
+
     const resolHtml = isSolved && diasResol !== null
       ? `<div style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:7px;padding:5px 9px;margin:5px 0;font-size:.71rem;color:#10b981;font-weight:600">✅ Resuelto en ${diasResol} día${diasResol!==1?'s':''}</div>`
       : '';
- 
+
     m.bindPopup(`
       ${fotoHtml}
       <div style="padding:9px 11px 11px">
@@ -205,11 +205,11 @@ function renderMarcadores(rs) {
         </div>
         <button class="pop-btn" onclick="verDetRico(${r.id})">Ver detalle completo →</button>
       </div>`, { maxWidth:245, minWidth:195 });
- 
+
     clusters.addLayer(m);
   });
 }
- 
+
 function renderHeat(rs) {
   if (heatLayer) map.removeLayer(heatLayer);
   heatLayer = L.heatLayer(rs.map(r => [r.latitud, r.longitud, 0.8]), {
@@ -217,16 +217,16 @@ function renderHeat(rs) {
     gradient:{ 0.2:'#0ea5e9', 0.5:'#f59e0b', 0.8:'#f97316', 1:'#ef4444' }
   }).addTo(map);
 }
- 
+
 // ══ ESTADÍSTICAS ══════════════════════════════════════════════
 async function cargarStats() {
   try {
     const d = await fetch(`${API}/estadisticas`).then(r => r.json());
- 
+
     // Total
     const elTotal = document.getElementById('st-total');
     if (elTotal) elTotal.textContent = d.resumen?.total ?? 0;
- 
+
     // Por tipo
     const elTipos = document.getElementById('st-tipos');
     if (!elTipos) return;
@@ -245,7 +245,7 @@ async function cargarStats() {
     }).join('');
   } catch(e) { console.error('stats:', e); }
 }
- 
+
 // ══ CONTROLES MAPA ════════════════════════════════════════════
 function setF(tipo, btn) {
   filtro = tipo;
@@ -253,21 +253,21 @@ function setF(tipo, btn) {
   btn.classList.add('on');
   cargarMapa();
 }
- 
+
 function toggleHeat() {
   heatOn = !heatOn;
   const btn = document.getElementById('btn-heat');
   if (btn) btn.classList.toggle('on', heatOn);
   heatOn ? renderHeat(todosR) : heatLayer && (map.removeLayer(heatLayer), heatLayer=null);
 }
- 
+
 function toggleSat() {
   satOn = !satOn;
   const btn = document.getElementById('btn-sat');
   if (btn) btn.classList.toggle('on', satOn);
   satOn ? (osmTile.remove(), satTile.addTo(map)) : (satTile.remove(), osmTile.addTo(map));
 }
- 
+
 function irGPS() {
   if (gpsPos) {
     map.flyTo([gpsPos.lat, gpsPos.lng], 16, { animate:true, duration:1.2 });
@@ -276,9 +276,9 @@ function irGPS() {
     toast('Buscando tu ubicación...', '');
   }
 }
- 
+
 function refreshAll() { cargarTodo(); toast('✓ Mapa actualizado', 'ok'); }
- 
+
 // ══ GPS / UBICACIÓN FORMULARIO ════════════════════════════════
 function pedirGPS() {
   const lp = document.getElementById('lp');
@@ -304,7 +304,7 @@ function pedirGPS() {
     { enableHighAccuracy:true, timeout:12000 }
   );
 }
- 
+
 function usarGPS() {
   if (gpsPos) {
     actualizarFormCoords(gpsPos.lat, gpsPos.lng);
@@ -314,7 +314,7 @@ function usarGPS() {
     pedirGPS();
   }
 }
- 
+
 function actualizarFormCoords(lat, lng) {
   const latF = document.getElementById('f-lat');
   const lngF = document.getElementById('f-lng');
@@ -325,7 +325,7 @@ function actualizarFormCoords(lat, lng) {
   if (lc)   lc.textContent = `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
   if (lp)   lp.className = 'lp ok';
 }
- 
+
 // ══ MODO MOVER PIN ════════════════════════════════════════════
 function iniciarMoverPin() {
   modoPin = true;
@@ -339,7 +339,7 @@ function iniciarMoverPin() {
   if (mc) mc.textContent = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
   toast('Mueve el mapa y confirma la ubicación 📌', '');
 }
- 
+
 function confirmarPin() {
   const c = map.getCenter();
   actualizarFormCoords(c.lat, c.lng);
@@ -350,7 +350,7 @@ function confirmarPin() {
   document.getElementById('minibar').classList.remove('show');
   toast('📍 Ubicación confirmada', 'ok');
 }
- 
+
 // ══ DRAWER NUEVO REPORTE ══════════════════════════════════════
 function abrirNuevo() {
   document.getElementById('ov-nuevo').classList.add('open');
@@ -363,7 +363,7 @@ function abrirNuevo() {
     pedirGPS();
   }
 }
- 
+
 function cerrarNuevo() {
   document.getElementById('ov-nuevo').classList.remove('open');
   document.getElementById('drawer-nuevo').classList.remove('open');
@@ -372,7 +372,7 @@ function cerrarNuevo() {
   document.getElementById('drawer-nuevo').style.transform = '';
   modoPin = false;
 }
- 
+
 // ══ FORMULARIO ════════════════════════════════════════════════
 function pickTipo(tipo, el) {
   document.getElementById('f-tipo').value = tipo;
@@ -382,19 +382,42 @@ function pickTipo(tipo, el) {
   sel.innerHTML = `<option value="">Selecciona subtipo...</option>` +
     (SUBTIPOS[tipo]||[]).map(s => `<option value="${s}">${s}</option>`).join('');
 }
- 
-function prevFoto(input) {
+
+// Guarda qué input tiene la foto seleccionada (cam o gal)
+let fotoOrigen = null;
+
+function prevFoto(input, origen) {
   const f = input.files[0];
   if (!f) return;
+  fotoOrigen = origen; // 'cam' o 'gal'
   const rd = new FileReader();
   rd.onload = e => {
-    document.getElementById('pz-img').src = e.target.result;
-    document.getElementById('pz-img').style.display = 'block';
-    document.getElementById('pz-ph').style.display  = 'none';
+    const img   = document.getElementById('pz-img');
+    const clear = document.getElementById('pz-clear');
+    img.src   = e.target.result;
+    img.style.display   = 'block';
+    clear.style.display = 'block';
+    // Ocultar los botones y mostrar preview
+    document.getElementById('pz-cam-btn').style.display = 'none';
+    document.getElementById('pz-gal-btn').style.display = 'none';
   };
   rd.readAsDataURL(f);
 }
- 
+
+function limpiarFoto() {
+  // Limpiar ambos inputs
+  const cam = document.getElementById('f-foto-cam');
+  const gal = document.getElementById('f-foto-gal');
+  if (cam) cam.value = '';
+  if (gal) gal.value = '';
+  fotoOrigen = null;
+  // Restaurar UI
+  document.getElementById('pz-img').style.display   = 'none';
+  document.getElementById('pz-clear').style.display = 'none';
+  document.getElementById('pz-cam-btn').style.display = '';
+  document.getElementById('pz-gal-btn').style.display = '';
+}
+
 async function enviar(e) {
   e.preventDefault();
   const tipo = document.getElementById('f-tipo').value;
@@ -402,7 +425,7 @@ async function enviar(e) {
   const lng  = document.getElementById('f-lng').value;
   if (!tipo) { toast('Selecciona una categoría', 'err'); return; }
   if (!lat || !lng) { toast('Ubica el problema en el mapa', 'err'); return; }
- 
+
   const btn = document.getElementById('btn-env');
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> Enviando...';
@@ -413,20 +436,22 @@ async function enviar(e) {
     fd.append('descripcion', document.getElementById('f-desc').value);
     fd.append('latitud',     lat);
     fd.append('longitud',    lng);
-    const foto = document.getElementById('f-foto').files[0];
+    // Tomar foto del input que esté activo (cámara o galería)
+    const fotoCam = document.getElementById('f-foto-cam');
+    const fotoGal = document.getElementById('f-foto-gal');
+    const foto = (fotoCam && fotoCam.files[0]) || (fotoGal && fotoGal.files[0]) || null;
     if (foto) fd.append('foto', foto);
- 
+
     const res  = await fetch(API, { method:'POST', body:fd });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al enviar');
- 
+
     toast(`✅ Reporte enviado — ${data.folio}`, 'ok');
     cerrarNuevo();
     document.getElementById('form-rep').reset();
     document.querySelectorAll('.ttile').forEach(t => t.classList.remove('sel'));
-    document.getElementById('pz-img').style.display = 'none';
-    document.getElementById('pz-ph').style.display  = 'block';
- 
+    limpiarFoto();
+
     clusters.addLayer(L.marker([parseFloat(lat), parseFloat(lng)], {
       icon: mkIcon(tipo, 'reportado', true)
     }));
@@ -439,17 +464,17 @@ async function enviar(e) {
     btn.innerHTML = '<span>📤</span> Enviar reporte';
   }
 }
- 
+
 // ══ DETALLE RICO (con seguimiento) ════════════════════════════
 async function verDetRico(id) {
   // Cerrar popup del mapa primero
   map.closePopup();
- 
+
   const ovDet  = document.getElementById('ov-det');
   const drwDet = document.getElementById('drawer-det');
   const detCon = document.getElementById('det-content');
   if (!ovDet || !drwDet || !detCon) return;
- 
+
   ovDet.classList.add('open');
   drwDet.classList.add('open');
   detCon.innerHTML = `
@@ -458,27 +483,27 @@ async function verDetRico(id) {
       <div style="height:14px;width:60%;border-radius:8px;background:#f0f2f5;margin-bottom:8px;animation:sh 1.2s infinite"></div>
       <div style="height:80px;border-radius:8px;background:#f0f2f5;animation:sh 1.2s infinite"></div>
     </div>`;
- 
+
   try {
     const [rBase, segData] = await Promise.all([
       fetch(`${API}/${id}`).then(r => r.json()),
       fetch(`${API_SEG}/${id}/historial`).then(r => r.json()).catch(() => ({ actualizaciones:[], metricas:null })),
     ]);
- 
+
     // Validar que la respuesta sea correcta
     if (!rBase || rBase.error) throw new Error(rBase?.error || 'Reporte no encontrado');
- 
+
     const t        = TIPOS[rBase.tipo] || TIPOS.otro;
     const est      = ESTADOS[rBase.estado] || ESTADOS.reportado;
     const pinColor = ESTADO_PIN[rBase.estado] || '#ef4444';
     const isSolved = rBase.estado === 'solucionado';
     const metricas = segData.metricas || null;
     const acts     = segData.actualizaciones || [];
- 
+
     // Foto de evidencia del cierre
     const actCierre = acts.filter(a => a.estado_nuevo === 'solucionado').pop();
     const evCierre  = actCierre?.evidencias?.[0] || null;
- 
+
     // Antes / después
     let fotoBloque = '';
     if (rBase.foto_url && evCierre) {
@@ -499,7 +524,7 @@ async function verDetRico(id) {
     } else if (rBase.foto_url) {
       fotoBloque = `<img src="${rBase.foto_url}" style="width:100%;height:130px;object-fit:cover;border-radius:20px 20px 0 0" onerror="this.style.display='none'"/>`;
     }
- 
+
     // Métricas
     let metHtml = '';
     if (metricas) {
@@ -511,7 +536,7 @@ async function verDetRico(id) {
         ${metricas.sla_ok != null ? `<div style="background:${metricas.sla_ok?'rgba(16,185,129,.12)':'rgba(239,68,68,.1)'};border:1px solid ${metricas.sla_ok?'rgba(16,185,129,.25)':'rgba(239,68,68,.2)'};border-radius:8px;padding:7px 11px;flex:1;min-width:80px"><div style="font-size:1rem;font-weight:700;color:${metricas.sla_ok?'#10b981':'#ef4444'}">${metricas.sla_ok?'✅':'⚠️'} SLA</div><div style="font-size:.65rem;color:var(--muted)">${metricas.sla_ok?'En plazo':'Fuera'}</div></div>` : ''}
       </div>`;
     }
- 
+
     // Timeline actualizaciones
     const TL_COL = {reportado:'#ef4444',revision:'#f59e0b',proceso:'#f97316',solucionado:'#10b981',cancelado:'#6b7280'};
     const TL_LAB = {reportado:'Reportado',revision:'En revisión',proceso:'En proceso',solucionado:'Solucionado',cancelado:'Cancelado'};
@@ -536,7 +561,7 @@ async function verDetRico(id) {
           }).join('')}
         </div>`;
     }
- 
+
     detCon.innerHTML = `
       ${rBase.foto_url && !evCierre ? fotoBloque : ''}
       <div class="det-body">
@@ -558,9 +583,9 @@ async function verDetRico(id) {
         ${tlHtml}
         <button class="btn-vote" onclick="votar(${rBase.id},this)">▲ Apoyar este reporte &nbsp;·&nbsp; <span>${rBase.votos||0}</span></button>
       </div>`;
- 
+
     map.flyTo([rBase.latitud, rBase.longitud], 17, { animate:true, duration:1 });
- 
+
   } catch(e) {
     console.error('verDetRico error:', e);
     detCon.innerHTML = `
@@ -571,14 +596,14 @@ async function verDetRico(id) {
       </div>`;
   }
 }
- 
+
 function cerrarDet() {
   const ov  = document.getElementById('ov-det');
   const drw = document.getElementById('drawer-det');
   if (ov)  ov.classList.remove('open');
   if (drw) drw.classList.remove('open');
 }
- 
+
 // ══ VOTAR ═════════════════════════════════════════════════════
 async function votar(id, btn) {
   try {
@@ -590,7 +615,7 @@ async function votar(id, btn) {
     toast('▲ Voto registrado', 'ok');
   } catch { toast('Error al votar', 'err'); }
 }
- 
+
 // ══ BÚSQUEDA ══════════════════════════════════════════════════
 function buscar(q) {
   if (!q.trim()) { renderMarcadores(todosR); return; }
@@ -607,7 +632,7 @@ function buscar(q) {
     map.fitBounds(L.latLngBounds(filtrados.map(r => [r.latitud, r.longitud])), { padding:[40,40] });
   }
 }
- 
+
 // ══ HELPERS ═══════════════════════════════════════════════════
 function toast(msg, type = '') {
   const el = document.createElement('div');
@@ -621,7 +646,7 @@ function toast(msg, type = '') {
     setTimeout(() => el.remove(), 300);
   }, 3200);
 }
- 
+
 function timeAgo(d) {
   if (!d) return '';
   const s = (Date.now() - new Date(d).getTime()) / 1000;
@@ -631,9 +656,8 @@ function timeAgo(d) {
   if (s < 2592000) return `${Math.floor(s/86400)}d`;
   return new Date(d).toLocaleDateString('es-MX', { day:'numeric', month:'short' });
 }
- 
+
 document.head.insertAdjacentHTML('beforeend', `<style>
   @keyframes ping { 0%{transform:scale(1);opacity:.7} 70%{transform:scale(2.2);opacity:0} 100%{transform:scale(2.2);opacity:0} }
   @keyframes sh   { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
 </style>`);
- 

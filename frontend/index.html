@@ -255,16 +255,29 @@
 
     /* Foto */
     .pz{
-      position:relative;border:1.5px dashed var(--border);
-      border-radius:var(--rsm);padding:14px;text-align:center;
-      cursor:pointer;background:var(--off);overflow:hidden;transition:all .16s;
+      border:1.5px dashed var(--border);
+      border-radius:var(--rsm);padding:10px;
+      background:var(--off);overflow:hidden;transition:all .16s;
     }
-    .pz:hover{border-color:var(--blue);background:var(--blue-lt);}
-    .pz input{position:absolute;inset:0;opacity:0;cursor:pointer;}
-    .pz-ico{font-size:1.3rem;margin-bottom:3px;}
-    .pz p{font-size:.76rem;color:var(--muted);}
-    .pz p b{color:var(--blue);}
+    .pz-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+    .pz-btn{
+      position:relative;overflow:hidden;
+      padding:12px 8px;border:1.5px solid var(--border);
+      border-radius:var(--rsm);background:var(--white);
+      text-align:center;cursor:pointer;transition:all .16s;
+    }
+    .pz-btn:hover{border-color:var(--blue);background:var(--blue-lt);}
+    .pz-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .pz-btn .pz-ico{font-size:1.4rem;display:block;margin-bottom:3px;}
+    .pz-btn p{font-size:.72rem;color:var(--muted);line-height:1.3;}
+    .pz-btn p b{color:var(--blue);}
     #pz-img{display:none;width:100%;height:88px;object-fit:cover;border-radius:7px;}
+    .pz-clear{
+      display:none;width:100%;margin-top:6px;padding:5px;
+      background:none;border:1px solid var(--border);border-radius:var(--rsm);
+      font-family:inherit;font-size:.72rem;color:var(--muted);cursor:pointer;
+    }
+    .pz-clear:hover{border-color:var(--red);color:var(--red);}
 
     .btn-env{
       width:100%;padding:13px;background:var(--blue);color:#fff;
@@ -463,10 +476,23 @@
 
       <div class="fi">
         <label>Foto <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
-        <div class="pz">
-          <input type="file" id="f-foto" accept="image/*" capture="environment" onchange="prevFoto(this)"/>
+        <div class="pz" id="pz-zone">
+          <div class="pz-btns">
+            <!-- Botón cámara: abre cámara del dispositivo -->
+            <div class="pz-btn" id="pz-cam-btn">
+              <input type="file" id="f-foto-cam" accept="image/*" capture="environment" onchange="prevFoto(this,'cam')"/>
+              <span class="pz-ico">📸</span>
+              <p><b>Tomar foto</b><br>Cámara</p>
+            </div>
+            <!-- Botón galería: abre galería/archivos -->
+            <div class="pz-btn" id="pz-gal-btn">
+              <input type="file" id="f-foto-gal" accept="image/*" onchange="prevFoto(this,'gal')"/>
+              <span class="pz-ico">🖼️</span>
+              <p><b>Elegir imagen</b><br>Galería</p>
+            </div>
+          </div>
           <img id="pz-img"/>
-          <div id="pz-ph"><div class="pz-ico">📷</div><p><b>Toca para añadir foto</b> o elige una</p></div>
+          <button type="button" class="pz-clear" id="pz-clear" onclick="limpiarFoto()">✕ Quitar foto</button>
         </div>
       </div>
 
